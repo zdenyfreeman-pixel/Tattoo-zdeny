@@ -1,467 +1,446 @@
-function createDefaultBodyDataUrl() {
+function makeHandPng() {
     const c = document.createElement("canvas");
-    c.width = 600;
-    c.height = 750;
+    c.width = 500;
+    c.height = 625;
     const ctx = c.getContext("2d");
-
-    const grad = ctx.createLinearGradient(0, 0, 600, 750);
-    grad.addColorStop(0, "#e5b89b");
-    grad.addColorStop(0.6, "#d29c7c");
-    grad.addColorStop(1, "#b47b5c");
-    ctx.fillStyle = "#1b1b20";
-    ctx.fillRect(0, 0, 600, 750);
-
-    ctx.fillStyle = grad;
+    ctx.fillStyle = "#19191e";
+    ctx.fillRect(0, 0, 500, 625);
+    ctx.fillStyle = "#d9a282";
     ctx.beginPath();
-    ctx.moveTo(215, 750);
-    ctx.lineTo(238, 330);
-    ctx.quadraticCurveTo(220, 230, 240, 140);
-    ctx.quadraticCurveTo(255, 95, 275, 100);
-    ctx.lineTo(290, 165);
-    ctx.lineTo(304, 88);
-    ctx.quadraticCurveTo(322, 82, 330, 102);
-    ctx.lineTo(328, 170);
-    ctx.lineTo(348, 104);
-    ctx.quadraticCurveTo(366, 100, 368, 122);
-    ctx.lineTo(352, 185);
-    ctx.lineTo(374, 132);
-    ctx.quadraticCurveTo(392, 130, 388, 152);
-    ctx.lineTo(362, 235);
-    ctx.quadraticCurveTo(355, 290, 370, 360);
-    ctx.lineTo(395, 750);
+    ctx.moveTo(180, 625);
+    ctx.lineTo(200, 270);
+    ctx.lineTo(220, 110);
+    ctx.lineTo(245, 110);
+    ctx.lineTo(255, 190);
+    ctx.lineTo(270, 95);
+    ctx.lineTo(295, 95);
+    ctx.lineTo(295, 200);
+    ctx.lineTo(315, 115);
+    ctx.lineTo(340, 120);
+    ctx.lineTo(315, 280);
+    ctx.lineTo(330, 625);
     ctx.closePath();
     ctx.fill();
-
     return c.toDataURL("image/png");
 }
 
-function removeWhiteEdgesDataUrl(dataUrl) {
+function makeMotifPng(type) {
+    const c = document.createElement("canvas");
+    c.width = 300;
+    c.height = 300;
+    const ctx = c.getContext("2d");
+    ctx.clearRect(0, 0, 300, 300);
+    ctx.save();
+    ctx.translate(150, 150);
+    ctx.strokeStyle = "#141414";
+    ctx.fillStyle = "#2b2b2b";
+    ctx.lineWidth = 4;
+
+    if (type === "rose") {
+        for (let i = 0; i < 6; i++) {
+            ctx.save();
+            ctx.rotate((i * Math.PI) / 3);
+            ctx.beginPath();
+            ctx.ellipse(0, -38, 30, 46, 0, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.stroke();
+            ctx.restore();
+        }
+        ctx.fillStyle = "#111111";
+        ctx.beginPath();
+        ctx.arc(0, 0, 20, 0, Math.PI * 2);
+        ctx.fill();
+    } else if (type === "geo") {
+        ctx.beginPath();
+        ctx.arc(0, 0, 95, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(0, -90);
+        ctx.lineTo(78, 48);
+        ctx.lineTo(-78, 48);
+        ctx.closePath();
+        ctx.stroke();
+    } else if (type === "line") {
+        ctx.lineWidth = 2.5;
+        ctx.beginPath();
+        ctx.moveTo(0, -105);
+        ctx.lineTo(18, -18);
+        ctx.lineTo(105, 0);
+        ctx.lineTo(18, 18);
+        ctx.lineTo(0, 105);
+        ctx.lineTo(-18, 18);
+        ctx.lineTo(-105, 0);
+        ctx.lineTo(-18, -18);
+        ctx.closePath();
+        ctx.stroke();
+    } else {
+        ctx.beginPath();
+        ctx.moveTo(-85, 20);
+        ctx.quadraticCurveTo(-30, -55, 15, -10);
+        ctx.quadraticCurveTo(50, -55, 85, -10);
+        ctx.quadraticCurveTo(40, 25, 20, 50);
+        ctx.closePath();
+        ctx.fill();
+    }
+    ctx.restore();
+    return c.toDataURL("image/png");
+}
+
+function stripWhiteBackground(rawSrc, threshold) {
     return new Promise((resolve) => {
+        if (!threshold || threshold <= 0) {
+            resolve(rawSrc);
+            return;
+        }
         const img = new Image();
         img.onload = () => {
             const c = document.createElement("canvas");
-            c.width = img.naturalWidth || 320;
-            c.height = img.naturalHeight || 320;
+            c.width = img.naturalWidth || 300;
+            c.height = img.naturalHeight || 300;
             const ctx = c.getContext("2d");
             ctx.drawImage(img, 0, 0, c.width, c.height);
-
             try {
                 const frame = ctx.getImageData(0, 0, c.width, c.height);
                 const d = frame.data;
                 for (let i = 0; i < d.length; i += 4) {
-                    const brightness = (d[i] + d[i + 1] + d[i + 2]) / 3;
-                    if (brightness > 230) {
-                        d[i] = 255;
-                        d[i + 1] = 255;
-                        d[i + 2] = 255;
+                    const r = d[i];
+                    const g = d[i + 1];
+                    const b = d[i + 2];
+                    const a = d[i + 3];
+                    if (a > 0) {
+                        const minCh = Math.min(r, g, b);
+                        const avgCh = (r + g + b) / 3;
+                        if (avgCh >= threshold && minCh >= threshold - 25) {
+                            d[i + 3] = 0;
+                        }
                     }
                 }
                 ctx.putImageData(frame, 0, 0);
                 resolve(c.toDataURL("image/png"));
             } catch (_) {
-                resolve(dataUrl);
+                resolve(rawSrc);
             }
         };
-        img.onerror = () => resolve(dataUrl);
-        img.src = dataUrl;
+        img.onerror = () => resolve(rawSrc);
+        img.src = rawSrc;
     });
 }
 
-function createMotifDataUrl(type) {
-    const c = document.createElement("canvas");
-    c.width = 320;
-    c.height = 320;
-    const ctx = c.getContext("2d");
+function initApp() {
+    const MOTIFS = [
+        { id: 1, name: "Ruza", style: "realism", complexity: 1.35, rawSrc: makeMotifPng("rose"), src: makeMotifPng("rose") },
+        { id: 2, name: "Geo", style: "blackwork", complexity: 1.4, rawSrc: makeMotifPng("geo"), src: makeMotifPng("geo") },
+        { id: 3, name: "Line", style: "fineline", complexity: 1.1, rawSrc: makeMotifPng("line"), src: makeMotifPng("line") },
+        { id: 4, name: "Vlna", style: "japanese", complexity: 1.45, rawSrc: makeMotifPng("wave"), src: makeMotifPng("wave") }
+    ];
 
-    ctx.fillStyle = "#ffffff";
-    ctx.fillRect(0, 0, 320, 320);
+    const state = {
+        style: "all",
+        motif: MOTIFS[0],
+        x: 0,
+        y: 0,
+        sizeCm: 15,
+        rotation: 0,
+        opacity: 0.9,
+        blur: 0.5,
+        contrast: 165,
+        brightness: 98,
+        whiteCutoff: 215,
+        blend: "multiply",
+        skinFilter: "none",
+        stream: null
+    };
 
-    ctx.save();
-    ctx.translate(160, 160);
+    const statusBox = document.getElementById("statusBox");
+    const stage = document.getElementById("stage");
+    const bodyImg = document.getElementById("bodyImg");
+    const cameraVideo = document.getElementById("cameraVideo");
+    const tattooLayer = document.getElementById("tattooLayer");
+    const tattooImg = document.getElementById("tattooImg");
+    const gallery = document.getElementById("gallery");
+    const priceDisplay = document.getElementById("priceDisplay");
+    const cameraBtn = document.getElementById("cameraBtn");
+    const snapBtn = document.getElementById("snapBtn");
+    const closeCamBtn = document.getElementById("closeCamBtn");
+    const bodyFileInput = document.getElementById("bodyFileInput");
+    const tattooFileInput = document.getElementById("tattooFileInput");
+    const saveBtn = document.getElementById("saveBtn");
 
-    if (type === "rose") {
-        const rad = ctx.createRadialGradient(0, 0, 15, 0, 0, 125);
-        rad.addColorStop(0, "rgba(25,25,25,0.45)");
-        rad.addColorStop(1, "rgba(255,255,255,0)");
-        ctx.fillStyle = rad;
-        ctx.beginPath();
-        ctx.arc(0, 0, 125, 0, Math.PI * 2);
-        ctx.fill();
+    if (bodyImg) bodyImg.src = makeHandPng();
+    if (tattooImg) tattooImg.src = state.motif.src;
 
-        ctx.strokeStyle = "#161616";
-        ctx.lineWidth = 4;
-        for (let i = 0; i < 6; i++) {
-            ctx.save();
-            ctx.rotate((i * Math.PI) / 3);
-            ctx.fillStyle = i % 2 === 0 ? "#2e2e2e" : "#4a4a4a";
-            ctx.beginPath();
-            ctx.ellipse(0, -40, 32, 48, 0, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.stroke();
-            ctx.restore();
+    function showStatus(msg) {
+        if (!statusBox) return;
+        statusBox.textContent = msg;
+        statusBox.style.display = msg ? "block" : "none";
+    }
+
+    function updatePrice() {
+        if (!priceDisplay) return;
+        const ratio = (state.sizeCm - 5) / 30;
+        const euros = Math.max(50, Math.min(300, Math.round((50 + ratio * 185 * (state.motif.complexity || 1.2)) / 5) * 5));
+        priceDisplay.textContent = `Odhad ceny: ${euros} €`;
+    }
+
+    function applyView() {
+        if (tattooImg) {
+            const w = Math.round(70 + ((state.sizeCm - 5) / 30) * 230);
+            tattooImg.style.width = `${w}px`;
+            tattooImg.style.mixBlendMode = state.blend;
+            tattooImg.style.opacity = String(state.opacity);
+            tattooImg.style.filter = `blur(${state.blur}px) contrast(${state.contrast}%) brightness(${state.brightness}%)`;
         }
-        ctx.fillStyle = "#141414";
-        ctx.beginPath();
-        ctx.arc(0, 0, 20, 0, Math.PI * 2);
-        ctx.fill();
-    } else if (type === "blackwork") {
-        ctx.strokeStyle = "#121212";
-        ctx.lineWidth = 7;
-        ctx.beginPath();
-        ctx.arc(0, 0, 102, 0, Math.PI * 2);
-        ctx.stroke();
+        if (tattooLayer) {
+            tattooLayer.style.transform = `translate(calc(-50% + ${state.x}px), calc(-50% + ${state.y}px)) rotate(${state.rotation}deg)`;
+        }
+        if (bodyImg) bodyImg.style.filter = state.skinFilter;
+        if (cameraVideo) cameraVideo.style.filter = state.skinFilter;
 
-        ctx.lineWidth = 5;
-        ctx.beginPath();
-        ctx.moveTo(0, -96);
-        ctx.lineTo(84, 52);
-        ctx.lineTo(-84, 52);
-        ctx.closePath();
-        ctx.stroke();
-
-        ctx.beginPath();
-        ctx.moveTo(0, 96);
-        ctx.lineTo(84, -52);
-        ctx.lineTo(-84, -52);
-        ctx.closePath();
-        ctx.stroke();
-
-        ctx.fillStyle = "#121212";
-        ctx.beginPath();
-        ctx.arc(0, 0, 22, 0, Math.PI * 2);
-        ctx.fill();
-    } else if (type === "fineline") {
-        ctx.strokeStyle = "#222222";
-        ctx.lineWidth = 2.5;
-        ctx.beginPath();
-        ctx.arc(0, 0, 92, 0, Math.PI * 2);
-        ctx.stroke();
-
-        ctx.beginPath();
-        ctx.moveTo(0, -110);
-        ctx.lineTo(18, -18);
-        ctx.lineTo(110, 0);
-        ctx.lineTo(18, 18);
-        ctx.lineTo(0, 110);
-        ctx.lineTo(-18, 18);
-        ctx.lineTo(-110, 0);
-        ctx.lineTo(-18, -18);
-        ctx.closePath();
-        ctx.stroke();
-    } else {
-        ctx.strokeStyle = "#181818";
-        ctx.lineWidth = 5;
-        ctx.beginPath();
-        ctx.arc(0, 0, 102, 0, Math.PI * 2);
-        ctx.stroke();
-
-        ctx.fillStyle = "#262626";
-        ctx.beginPath();
-        ctx.moveTo(-90, 22);
-        ctx.quadraticCurveTo(-38, -60, 18, -10);
-        ctx.quadraticCurveTo(52, -60, 90, -15);
-        ctx.quadraticCurveTo(48, 18, 24, 50);
-        ctx.quadraticCurveTo(-28, 14, -90, 22);
-        ctx.closePath();
-        ctx.fill();
-    }
-
-    ctx.restore();
-    return c.toDataURL("image/png");
-}
-
-const MOTIFS = [
-    { id: 1, name: "Tieňová ruža", style: "realism", complexity: 1.35, src: createMotifDataUrl("rose") },
-    { id: 2, name: "Blackwork", style: "blackwork", complexity: 1.4, src: createMotifDataUrl("blackwork") },
-    { id: 3, name: "Fine Line", style: "fineline", complexity: 1.1, src: createMotifDataUrl("fineline") },
-    { id: 4, name: "Japonská vlna", style: "japanese", complexity: 1.45, src: createMotifDataUrl("wave") }
-];
-
-const PRESETS = {
-    noWhite:  { blend: "multiply",   opacity: 0.90, blur: 0.5, contrast: 220, brightness: 95,  saturation: 100, hue: 0 },
-    fresh:    { blend: "multiply",   opacity: 0.88, blur: 0.6, contrast: 175, brightness: 98,  saturation: 105, hue: 0 },
-    healed:   { blend: "multiply",   opacity: 0.70, blur: 1.2, contrast: 145, brightness: 102, saturation: 75,  hue: 0 },
-    vintage:  { blend: "multiply",   opacity: 0.62, blur: 1.0, contrast: 130, brightness: 104, saturation: 45,  hue: 12 },
-    soft:     { blend: "multiply",   opacity: 0.58, blur: 1.8, contrast: 130, brightness: 104, saturation: 80,  hue: 0 },
-    bold:     { blend: "color-burn", opacity: 0.94, blur: 0.4, contrast: 230, brightness: 92,  saturation: 115, hue: 0 },
-    faded:    { blend: "multiply",   opacity: 0.45, blur: 1.5, contrast: 110, brightness: 108, saturation: 35,  hue: 0 },
-    matte:    { blend: "darken",     opacity: 0.78, blur: 0.9, contrast: 150, brightness: 100, saturation: 65,  hue: 0 },
-    sharp:    { blend: "multiply",   opacity: 0.92, blur: 0.0, contrast: 210, brightness: 96,  saturation: 100, hue: 0 },
-    warmInk:  { blend: "multiply",   opacity: 0.86, blur: 0.6, contrast: 170, brightness: 98,  saturation: 120, hue: 18 },
-    coolInk:  { blend: "multiply",   opacity: 0.86, blur: 0.6, contrast: 175, brightness: 98,  saturation: 115, hue: -22 },
-    redAccent:{ blend: "multiply",   opacity: 0.88, blur: 0.5, contrast: 185, brightness: 96,  saturation: 165, hue: -35 }
-};
-
-const state = {
-    style: "all",
-    selectedMotif: MOTIFS[0],
-    x: 0,
-    y: 0,
-    sizeCm: 15,
-    rotation: 0,
-    opacity: 0.9,
-    blur: 0.5,
-    contrast: 220,
-    brightness: 95,
-    saturation: 100,
-    hue: 0,
-    blend: "multiply",
-    skinFilter: "none",
-    cameraStream: null
-};
-
-const el = {
-    stage: document.getElementById("stage"),
-    bodyImg: document.getElementById("bodyImg"),
-    cameraVideo: document.getElementById("cameraVideo"),
-    tattooLayer: document.getElementById("tattooLayer"),
-    tattooImg: document.getElementById("tattooImg"),
-    gallery: document.getElementById("gallery"),
-    styleTabs: document.getElementById("styleTabs"),
-    presetChips: document.getElementById("presetChips"),
-    blendSelect: document.getElementById("blendSelect"),
-    skinFilterSelect: document.getElementById("skinFilterSelect"),
-    priceDisplay: document.getElementById("priceDisplay"),
-    cameraBtn: document.getElementById("cameraBtn"),
-    snapBtn: document.getElementById("snapBtn"),
-    closeCamBtn: document.getElementById("closeCamBtn"),
-    bodyFileInput: document.getElementById("bodyFileInput"),
-    tattooFileInput: document.getElementById("tattooFileInput"),
-    saveBtn: document.getElementById("saveBtn"),
-    sizeRange: document.getElementById("sizeRange"),
-    rotRange: document.getElementById("rotRange"),
-    opRange: document.getElementById("opRange"),
-    blurRange: document.getElementById("blurRange"),
-    conRange: document.getElementById("conRange"),
-    briRange: document.getElementById("briRange"),
-    satRange: document.getElementById("satRange"),
-    hueRange: document.getElementById("hueRange"),
-    sizeVal: document.getElementById("sizeVal"),
-    rotVal: document.getElementById("rotVal"),
-    opVal: document.getElementById("opVal"),
-    blurVal: document.getElementById("blurVal"),
-    conVal: document.getElementById("conVal"),
-    briVal: document.getElementById("briVal"),
-    satVal: document.getElementById("satVal"),
-    hueVal: document.getElementById("hueVal")
-};
-
-el.bodyImg.src = createDefaultBodyDataUrl();
-
-function getTattooFilterCss() {
-    return `blur(${state.blur}px) contrast(${state.contrast}%) brightness(${state.brightness}%) saturate(${state.saturation}%) hue-rotate(${state.hue}deg)`;
-}
-
-function updatePrice() {
-    const ratio = (state.sizeCm - 5) / 30;
-    const raw = 50 + ratio * 185 * (state.selectedMotif.complexity || 1.2);
-    const euros = Math.max(50, Math.min(300, Math.round(raw / 5) * 5));
-    el.priceDisplay.textContent = `Odhad ceny: ${euros} €`;
-}
-
-function applyStyles() {
-    const widthPx = Math.round(70 + ((state.sizeCm - 5) / 30) * 230);
-    el.tattooImg.style.width = `${widthPx}px`;
-    el.tattooLayer.style.transform = `translate(calc(-50% + ${state.x}px), calc(-50% + ${state.y}px)) rotate(${state.rotation}deg)`;
-
-    el.tattooImg.style.mixBlendMode = state.blend;
-    el.tattooImg.style.opacity = String(state.opacity);
-    el.tattooImg.style.filter = getTattooFilterCss();
-    el.bodyImg.style.filter = state.skinFilter;
-    el.cameraVideo.style.filter = state.skinFilter;
-
-    el.sizeVal.textContent = `${state.sizeCm} cm`;
-    el.rotVal.textContent = `${state.rotation}°`;
-    el.opVal.textContent = `${Math.round(state.opacity * 100)}%`;
-    el.blurVal.textContent = `${state.blur}px`;
-    el.conVal.textContent = `${state.contrast}%`;
-    el.briVal.textContent = `${state.brightness}%`;
-    el.satVal.textContent = `${state.saturation}%`;
-    el.hueVal.textContent = `${state.hue}°`;
-
-    updatePrice();
-}
-
-function syncInputsFromState() {
-    el.blendSelect.value = state.blend;
-    el.opRange.value = Math.round(state.opacity * 100);
-    el.blurRange.value = state.blur;
-    el.conRange.value = state.contrast;
-    el.briRange.value = state.brightness;
-    el.satRange.value = state.saturation;
-    el.hueRange.value = state.hue;
-}
-
-function selectMotif(motif) {
-    state.selectedMotif = motif;
-    el.tattooImg.src = motif.src;
-    renderGallery();
-    updatePrice();
-}
-
-function renderGallery() {
-    el.gallery.innerHTML = "";
-    const items = state.style === "all" ? MOTIFS : MOTIFS.filter(m => m.style === state.style);
-    items.forEach(m => {
-        const card = document.createElement("div");
-        card.className = "thumb" + (state.selectedMotif.id === m.id ? " active" : "");
-        const img = document.createElement("img");
-        img.src = m.src;
-        img.alt = m.name;
-        card.appendChild(img);
-        card.addEventListener("click", () => selectMotif(m));
-        el.gallery.appendChild(card);
-    });
-}
-
-el.styleTabs.addEventListener("click", e => {
-    const btn = e.target.closest(".tab");
-    if (!btn) return;
-    el.styleTabs.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
-    btn.classList.add("active");
-    state.style = btn.dataset.style;
-    renderGallery();
-});
-
-el.presetChips.addEventListener("click", e => {
-    const chip = e.target.closest(".chip");
-    if (!chip) return;
-    el.presetChips.querySelectorAll(".chip").forEach(c => c.classList.remove("active"));
-    chip.classList.add("active");
-
-    const p = PRESETS[chip.dataset.preset];
-    if (!p) return;
-    Object.assign(state, p);
-    syncInputsFromState();
-    applyStyles();
-});
-
-el.blendSelect.addEventListener("change", () => { state.blend = el.blendSelect.value; applyStyles(); });
-el.skinFilterSelect.addEventListener("change", () => { state.skinFilter = el.skinFilterSelect.value; applyStyles(); });
-el.sizeRange.addEventListener("input", () => { state.sizeCm = Number(el.sizeRange.value); applyStyles(); });
-el.rotRange.addEventListener("input", () => { state.rotation = Number(el.rotRange.value); applyStyles(); });
-el.opRange.addEventListener("input", () => { state.opacity = Number(el.opRange.value) / 100; applyStyles(); });
-el.blurRange.addEventListener("input", () => { state.blur = Number(el.blurRange.value); applyStyles(); });
-el.conRange.addEventListener("input", () => { state.contrast = Number(el.conRange.value); applyStyles(); });
-el.briRange.addEventListener("input", () => { state.brightness = Number(el.briRange.value); applyStyles(); });
-el.satRange.addEventListener("input", () => { state.saturation = Number(el.satRange.value); applyStyles(); });
-el.hueRange.addEventListener("input", () => { state.hue = Number(el.hueRange.value); applyStyles(); });
-
-let drag = null;
-el.tattooLayer.addEventListener("pointerdown", e => {
-    e.preventDefault();
-    el.tattooLayer.setPointerCapture(e.pointerId);
-    drag = { x: e.clientX - state.x, y: e.clientY - state.y };
-});
-el.tattooLayer.addEventListener("pointermove", e => {
-    if (!drag) return;
-    state.x = Math.round(e.clientX - drag.x);
-    state.y = Math.round(e.clientY - drag.y);
-    applyStyles();
-});
-el.tattooLayer.addEventListener("pointerup", () => { drag = null; });
-el.tattooLayer.addEventListener("pointercancel", () => { drag = null; });
-
-async function startCamera() {
-    try {
-        const stream = await navigator.mediaDevices.getUserMedia({
-            video: { facingMode: { ideal: "environment" } },
-            audio: false
+        const labels = {
+            sizeVal: `${state.sizeCm} cm`,
+            rotVal: `${state.rotation}°`,
+            opVal: `${Math.round(state.opacity * 100)}%`,
+            blurVal: `${state.blur}px`,
+            conVal: `${state.contrast}%`,
+            briVal: `${state.brightness}%`,
+            cutVal: `${state.whiteCutoff}`
+        };
+        Object.keys(labels).forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.textContent = labels[id];
         });
-        state.cameraStream = stream;
-        el.cameraVideo.srcObject = stream;
-        await el.cameraVideo.play();
-        el.stage.classList.add("camera-on");
-    } catch (err) {
-        alert("Nepodarilo sa zapnúť kameru. Skontroluj povolenie kamery v prehliadači alebo použi „Nahrať fotku“.");
+        updatePrice();
     }
+
+    async function refreshMotifWhiteCut() {
+        const processed = await stripWhiteBackground(state.motif.rawSrc, state.whiteCutoff);
+        state.motif.src = processed;
+        if (tattooImg) tattooImg.src = processed;
+    }
+
+    function renderGallery() {
+        if (!gallery) return;
+        gallery.innerHTML = "";
+        const items = state.style === "all" ? MOTIFS : MOTIFS.filter(m => m.style === state.style);
+        items.forEach(m => {
+            const card = document.createElement("div");
+            card.className = "thumb" + (state.motif.id === m.id ? " active" : "");
+            const img = document.createElement("img");
+            img.src = m.src;
+            img.alt = m.name;
+            card.appendChild(img);
+            card.addEventListener("click", async () => {
+                state.motif = m;
+                await refreshMotifWhiteCut();
+                renderGallery();
+                updatePrice();
+            });
+            gallery.appendChild(card);
+        });
+    }
+
+    function stopCamera() {
+        if (state.stream) {
+            state.stream.getTracks().forEach(t => t.stop());
+            state.stream = null;
+        }
+        if (stage) stage.classList.remove("camera-on");
+    }
+
+    if (cameraBtn) {
+        cameraBtn.addEventListener("click", async () => {
+            showStatus("");
+            if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                showStatus("Živá kamera tu nie je podporovaná. Použi tlačidlo Nahrať fotku.");
+                return;
+            }
+            try {
+                stopCamera();
+                const stream = await navigator.mediaDevices.getUserMedia({
+                    video: { facingMode: "environment" },
+                    audio: false
+                });
+                state.stream = stream;
+                if (cameraVideo) {
+                    cameraVideo.srcObject = stream;
+                    await cameraVideo.play();
+                }
+                if (stage) stage.classList.add("camera-on");
+            } catch (err) {
+                showStatus("Kamera nešla spustiť: " + (err && err.message ? err.message : "skontroluj povolenie kamery v prehliadači."));
+            }
+        });
+    }
+
+    if (closeCamBtn) {
+        closeCamBtn.addEventListener("click", () => {
+            stopCamera();
+            showStatus("");
+        });
+    }
+
+    if (snapBtn) {
+        snapBtn.addEventListener("click", () => {
+            const w = (cameraVideo && cameraVideo.videoWidth) || 600;
+            const h = (cameraVideo && cameraVideo.videoHeight) || 750;
+            const c = document.createElement("canvas");
+            c.width = w;
+            c.height = h;
+            if (cameraVideo) c.getContext("2d").drawImage(cameraVideo, 0, 0, w, h);
+            if (bodyImg) bodyImg.src = c.toDataURL("image/jpeg", 0.92);
+            stopCamera();
+        });
+    }
+
+    if (bodyFileInput) {
+        bodyFileInput.addEventListener("change", e => {
+            const file = e.target.files && e.target.files[0];
+            if (!file) return;
+            stopCamera();
+            showStatus("");
+            const reader = new FileReader();
+            reader.onload = () => {
+                if (bodyImg) bodyImg.src = reader.result;
+            };
+            reader.readAsDataURL(file);
+            e.target.value = "";
+        });
+    }
+
+    if (tattooFileInput) {
+        tattooFileInput.addEventListener("change", e => {
+            const file = e.target.files && e.target.files[0];
+            if (!file) return;
+            showStatus("");
+            const reader = new FileReader();
+            reader.onload = async () => {
+                const raw = reader.result;
+                const cleaned = await stripWhiteBackground(raw, state.whiteCutoff);
+                const custom = { id: Date.now(), name: file.name, style: "all", complexity: 1.25, rawSrc: raw, src: cleaned };
+                MOTIFS.unshift(custom);
+                state.motif = custom;
+                if (tattooImg) tattooImg.src = cleaned;
+                renderGallery();
+                updatePrice();
+            };
+            reader.readAsDataURL(file);
+            e.target.value = "";
+        });
+    }
+
+    document.querySelectorAll(".tab").forEach(tab => {
+        tab.addEventListener("click", () => {
+            document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
+            tab.classList.add("active");
+            state.style = tab.dataset.style || "all";
+            renderGallery();
+        });
+    });
+
+    document.querySelectorAll(".chip").forEach(chip => {
+        chip.addEventListener("click", async () => {
+            document.querySelectorAll(".chip").forEach(c => c.classList.remove("active"));
+            chip.classList.add("active");
+            const p = chip.dataset.preset;
+            if (p === "noWhite") { state.blend = "multiply"; state.opacity = 0.92; state.blur = 0.5; state.contrast = 175; state.brightness = 96; state.whiteCutoff = 215; }
+            else if (p === "fresh") { state.blend = "multiply"; state.opacity = 0.88; state.blur = 0.6; state.contrast = 155; state.brightness = 98; state.whiteCutoff = 225; }
+            else if (p === "healed") { state.blend = "multiply"; state.opacity = 0.7; state.blur = 1.2; state.contrast = 135; state.brightness = 102; state.whiteCutoff = 230; }
+            else if (p === "vintage") { state.blend = "multiply"; state.opacity = 0.62; state.blur = 1.0; state.contrast = 125; state.brightness = 104; state.whiteCutoff = 235; }
+            else if (p === "soft") { state.blend = "multiply"; state.opacity = 0.58; state.blur = 1.8; state.contrast = 120; state.brightness = 104; state.whiteCutoff = 230; }
+            else if (p === "bold") { state.blend = "color-burn"; state.opacity = 0.94; state.blur = 0.4; state.contrast = 200; state.brightness = 94; state.whiteCutoff = 210; }
+            else if (p === "faded") { state.blend = "multiply"; state.opacity = 0.45; state.blur = 1.5; state.contrast = 110; state.brightness = 108; state.whiteCutoff = 235; }
+            else if (p === "sharp") { state.blend = "multiply"; state.opacity = 0.92; state.blur = 0.0; state.contrast = 190; state.brightness = 96; state.whiteCutoff = 210; }
+
+            const bs = document.getElementById("blendSelect");
+            if (bs) bs.value = state.blend;
+            const setVal = (id, v) => { const n = document.getElementById(id); if (n) n.value = v; };
+            setVal("opRange", Math.round(state.opacity * 100));
+            setVal("blurRange", state.blur);
+            setVal("conRange", state.contrast);
+            setVal("briRange", state.brightness);
+            setVal("cutRange", state.whiteCutoff);
+            await refreshMotifWhiteCut();
+            renderGallery();
+            applyView();
+        });
+    });
+
+    const bind = (id, fn) => {
+        const n = document.getElementById(id);
+        if (n) n.addEventListener(n.tagName === "SELECT" ? "change" : "input", () => fn(n.value));
+    };
+    bind("blendSelect", v => { state.blend = v; applyView(); });
+    bind("skinFilterSelect", v => { state.skinFilter = v; applyView(); });
+    bind("sizeRange", v => { state.sizeCm = Number(v); applyView(); });
+    bind("rotRange", v => { state.rotation = Number(v); applyView(); });
+    bind("opRange", v => { state.opacity = Number(v) / 100; applyView(); });
+    bind("blurRange", v => { state.blur = Number(v); applyView(); });
+    bind("conRange", v => { state.contrast = Number(v); applyView(); });
+    bind("briRange", v => { state.brightness = Number(v); applyView(); });
+    bind("cutRange", async v => {
+        state.whiteCutoff = Number(v);
+        applyView();
+        await refreshMotifWhiteCut();
+        renderGallery();
+    });
+
+    if (tattooLayer) {
+        let drag = null;
+        tattooLayer.addEventListener("pointerdown", e => {
+            e.preventDefault();
+            tattooLayer.setPointerCapture(e.pointerId);
+            drag = { x: e.clientX - state.x, y: e.clientY - state.y };
+        });
+        tattooLayer.addEventListener("pointermove", e => {
+            if (!drag) return;
+            state.x = Math.round(e.clientX - drag.x);
+            state.y = Math.round(e.clientY - drag.y);
+            applyView();
+        });
+        tattooLayer.addEventListener("pointerup", () => { drag = null; });
+        tattooLayer.addEventListener("pointercancel", () => { drag = null; });
+    }
+
+    if (saveBtn && stage) {
+        saveBtn.addEventListener("click", () => {
+            const rect = stage.getBoundingClientRect();
+            const out = document.createElement("canvas");
+            out.width = Math.round(rect.width * 2);
+            out.height = Math.round(rect.height * 2);
+            const ctx = out.getContext("2d");
+            ctx.scale(2, 2);
+            ctx.filter = state.skinFilter || "none";
+            if (bodyImg && bodyImg.complete && bodyImg.naturalWidth) {
+                ctx.drawImage(bodyImg, 0, 0, rect.width, rect.height);
+            }
+            if (tattooImg && tattooImg.complete && tattooImg.naturalWidth) {
+                ctx.save();
+                const cx = rect.width / 2 + state.x;
+                const cy = rect.height / 2 + state.y;
+                const w = tattooImg.getBoundingClientRect().width;
+                const ratio = tattooImg.naturalWidth ? tattooImg.naturalHeight / tattooImg.naturalWidth : 1;
+                const h = w * ratio;
+                ctx.translate(cx, cy);
+                ctx.rotate((state.rotation * Math.PI) / 180);
+                ctx.globalCompositeOperation = state.blend === "normal" ? "source-over" : state.blend;
+                ctx.globalAlpha = state.opacity;
+                ctx.filter = `blur(${state.blur}px) contrast(${state.contrast}%) brightness(${state.brightness}%)`;
+                ctx.drawImage(tattooImg, -w / 2, -h / 2, w, h);
+                ctx.restore();
+            }
+            const a = document.createElement("a");
+            a.download = "inkpreview.png";
+            a.href = out.toDataURL("image/png");
+            a.click();
+        });
+    }
+
+    renderGallery();
+    applyView();
 }
 
-function stopCamera() {
-    if (state.cameraStream) {
-        state.cameraStream.getTracks().forEach(t => t.stop());
-        state.cameraStream = null;
-    }
-    el.stage.classList.remove("camera-on");
+if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", initApp);
+} else {
+    initApp();
 }
-
-el.cameraBtn.addEventListener("click", startCamera);
-el.closeCamBtn.addEventListener("click", stopCamera);
-
-el.snapBtn.addEventListener("click", () => {
-    const w = el.cameraVideo.videoWidth || 600;
-    const h = el.cameraVideo.videoHeight || 750;
-    const c = document.createElement("canvas");
-    c.width = w;
-    c.height = h;
-    c.getContext("2d").drawImage(el.cameraVideo, 0, 0, w, h);
-    el.bodyImg.src = c.toDataURL("image/jpeg", 0.92);
-    stopCamera();
-});
-
-el.bodyFileInput.addEventListener("change", e => {
-    const file = e.target.files && e.target.files[0];
-    if (!file) return;
-    stopCamera();
-    const reader = new FileReader();
-    reader.onload = () => {
-        el.bodyImg.src = reader.result;
-    };
-    reader.readAsDataURL(file);
-    e.target.value = "";
-});
-
-el.tattooFileInput.addEventListener("change", e => {
-    const file = e.target.files && e.target.files[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = async () => {
-        const cleaned = await removeWhiteEdgesDataUrl(reader.result);
-        const custom = { id: Date.now(), name: file.name, style: "all", complexity: 1.25, src: cleaned };
-        MOTIFS.unshift(custom);
-        selectMotif(custom);
-    };
-    reader.readAsDataURL(file);
-    e.target.value = "";
-});
-
-el.saveBtn.addEventListener("click", () => {
-    const rect = el.stage.getBoundingClientRect();
-    const out = document.createElement("canvas");
-    out.width = Math.round(rect.width * 2);
-    out.height = Math.round(rect.height * 2);
-    const ctx = out.getContext("2d");
-    ctx.scale(2, 2);
-
-    ctx.filter = state.skinFilter || "none";
-    if (el.bodyImg.complete && el.bodyImg.naturalWidth) {
-        ctx.drawImage(el.bodyImg, 0, 0, rect.width, rect.height);
-    }
-
-    ctx.save();
-    const cx = rect.width / 2 + state.x;
-    const cy = rect.height / 2 + state.y;
-    const w = el.tattooImg.getBoundingClientRect().width;
-    const ratio = el.tattooImg.naturalWidth ? el.tattooImg.naturalHeight / el.tattooImg.naturalWidth : 1;
-    const h = w * ratio;
-
-    ctx.translate(cx, cy);
-    ctx.rotate((state.rotation * Math.PI) / 180);
-    ctx.globalCompositeOperation = state.blend === "normal" ? "source-over" : state.blend;
-    ctx.globalAlpha = state.opacity;
-    ctx.filter = getTattooFilterCss();
-
-    if (el.tattooImg.complete && el.tattooImg.naturalWidth) {
-        ctx.drawImage(el.tattooImg, -w / 2, -h / 2, w, h);
-    }
-    ctx.restore();
-
-    const a = document.createElement("a");
-    a.download = "inkpreview.png";
-    a.href = out.toDataURL("image/png");
-    a.click();
-});
-
-selectMotif(MOTIFS[0]);
-syncInputsFromState();
-applyStyles();
