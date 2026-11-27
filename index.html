@@ -70,28 +70,8 @@
             gap: 8px;
         }
 
-        .file-wrap {
-            position: relative;
-            overflow: hidden;
-            border-radius: 10px;
-            display: flex;
-        }
-
-        .file-wrap .btn {
-            width: 100%;
-        }
-
-        .file-wrap input[type="file"] {
-            position: absolute;
-            inset: 0;
-            opacity: 0;
-            width: 100%;
-            height: 100%;
-            cursor: pointer;
-            display: block;
-        }
-
         .btn {
+            width: 100%;
             background: #25252d;
             color: #f4f4f8;
             border: 1px solid #363642;
@@ -379,14 +359,12 @@
 
         <div class="row-actions">
             <button type="button" class="btn btn-primary" id="cameraBtn">📷 Odfotiť telo</button>
-
-            <div class="file-wrap">
-                <span class="btn">🖼️ Nahrať fotku</span>
-                <input type="file" id="bodyFileInput" accept="image/*" />
-            </div>
+            <button type="button" class="btn" id="uploadBodyBtn">🖼️ Nahrať fotku</button>
         </div>
 
+        <input type="file" id="bodyFileInput" accept="image/*" style="display:none;" />
         <input type="file" id="nativeCamInput" accept="image/*" capture="environment" style="display:none;" />
+        <input type="file" id="tattooFileInput" accept="image/*" style="display:none;" />
 
         <div class="stage" id="stage">
             <canvas id="bodyCanvas" width="500" height="625"></canvas>
@@ -501,11 +479,7 @@
         </div>
 
         <div class="row-actions">
-            <div class="file-wrap">
-                <span class="btn">+ Vlastný motív</span>
-                <input type="file" id="tattooFileInput" accept="image/*" />
-            </div>
-
+            <button type="button" class="btn" id="uploadMotifBtn">+ Vlastný motív</button>
             <button type="button" class="btn btn-primary" id="saveBtn">💾 Uložiť náhľad</button>
         </div>
     </div>
@@ -721,11 +695,13 @@
             const gallery = document.getElementById("gallery");
             const priceDisplay = document.getElementById("priceDisplay");
             const cameraBtn = document.getElementById("cameraBtn");
+            const uploadBodyBtn = document.getElementById("uploadBodyBtn");
+            const uploadMotifBtn = document.getElementById("uploadMotifBtn");
+            const bodyFileInput = document.getElementById("bodyFileInput");
             const nativeCamInput = document.getElementById("nativeCamInput");
+            const tattooFileInput = document.getElementById("tattooFileInput");
             const snapBtn = document.getElementById("snapBtn");
             const closeCamBtn = document.getElementById("closeCamBtn");
-            const bodyFileInput = document.getElementById("bodyFileInput");
-            const tattooFileInput = document.getElementById("tattooFileInput");
             const clearPhotoBtn = document.getElementById("clearPhotoBtn");
             const resetMotifBtn = document.getElementById("resetMotifBtn");
             const saveBtn = document.getElementById("saveBtn");
@@ -829,23 +805,22 @@
             }
 
             function loadImageFromFile(file, onLoaded) {
-                const objUrl = URL.createObjectURL(file);
-                const img = new Image();
-                img.onload = () => {
-                    onLoaded(img);
-                    URL.revokeObjectURL(objUrl);
-                };
-                img.onerror = () => {
-                    URL.revokeObjectURL(objUrl);
-                    const reader = new FileReader();
-                    reader.onload = () => {
+                const reader = new FileReader();
+                reader.onload = () => {
+                    const img = new Image();
+                    img.onload = () => onLoaded(img);
+                    img.onerror = () => {
+                        const url = URL.createObjectURL(file);
                         const img2 = new Image();
-                        img2.onload = () => onLoaded(img2);
-                        img2.src = reader.result;
+                        img2.onload = () => {
+                            onLoaded(img2);
+                            URL.revokeObjectURL(url);
+                        };
+                        img2.src = url;
                     };
-                    reader.readAsDataURL(file);
+                    img.src = reader.result;
                 };
-                img.src = objUrl;
+                reader.readAsDataURL(file);
             }
 
             function applyUploadedBodyFile(file) {
@@ -854,6 +829,20 @@
                 showStatus("");
                 loadImageFromFile(file, img => {
                     drawPhotoCoverOnCanvas(bodyCanvas, img);
+                });
+            }
+
+            if (uploadBodyBtn && bodyFileInput) {
+                uploadBodyBtn.addEventListener("click", () => {
+                    bodyFileInput.value = "";
+                    bodyFileInput.click();
+                });
+            }
+
+            if (uploadMotifBtn && tattooFileInput) {
+                uploadMotifBtn.addEventListener("click", () => {
+                    tattooFileInput.value = "";
+                    tattooFileInput.click();
                 });
             }
 
@@ -891,7 +880,10 @@
                 cameraBtn.addEventListener("click", async () => {
                     showStatus("");
                     if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-                        if (nativeCamInput) nativeCamInput.click();
+                        if (nativeCamInput) {
+                            nativeCamInput.value = "";
+                            nativeCamInput.click();
+                        }
                         return;
                     }
                     try {
@@ -908,9 +900,10 @@
                         if (stage) stage.classList.add("camera-on");
                     } catch (_) {
                         if (nativeCamInput) {
+                            nativeCamInput.value = "";
                             nativeCamInput.click();
                         } else {
-                            showStatus("Kamera sa neotvorila. Skús tlačidlo Nahrať fotku.");
+                            showStatus("Kamera sa neotvorila. Skús Nahrať fotku.");
                         }
                     }
                 });
@@ -920,7 +913,6 @@
                 nativeCamInput.addEventListener("change", e => {
                     const file = e.target.files && e.target.files[0];
                     if (file) applyUploadedBodyFile(file);
-                    e.target.value = "";
                 });
             }
 
@@ -944,7 +936,6 @@
                 bodyFileInput.addEventListener("change", e => {
                     const file = e.target.files && e.target.files[0];
                     if (file) applyUploadedBodyFile(file);
-                    e.target.value = "";
                 });
             }
 
@@ -965,7 +956,6 @@
                         redrawMotifCanvas();
                         applyView();
                     });
-                    e.target.value = "";
                 });
             }
 
