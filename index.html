@@ -4,7 +4,320 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>INKPREVIEW</title>
-    <link rel="stylesheet" href="style.css?v=30" />
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background: #0f0f12;
+            color: #f4f4f8;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+        }
+
+        .app {
+            width: 100%;
+            max-width: 540px;
+            min-height: 100vh;
+            background: #19191e;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            padding: 10px;
+        }
+
+        .topbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+        }
+
+        .brand {
+            font-size: 1.15rem;
+            font-weight: 800;
+        }
+
+        .price-pill {
+            background: rgba(230, 57, 70, 0.2);
+            border: 1px solid #e63946;
+            color: #ffd6da;
+            padding: 6px 12px;
+            border-radius: 999px;
+            font-weight: 700;
+            font-size: 0.9rem;
+        }
+
+        .status-box {
+            font-size: 12px;
+            color: #ffd6da;
+            background: #2b191d;
+            border: 1px solid #692830;
+            padding: 7px 10px;
+            border-radius: 8px;
+            display: none;
+        }
+
+        .row-actions {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+        }
+
+        .file-wrap {
+            position: relative;
+            overflow: hidden;
+            border-radius: 10px;
+            display: flex;
+        }
+
+        .file-wrap .btn {
+            width: 100%;
+        }
+
+        .file-wrap input[type="file"] {
+            position: absolute;
+            inset: 0;
+            opacity: 0;
+            width: 100%;
+            height: 100%;
+            cursor: pointer;
+            display: block;
+        }
+
+        .btn {
+            background: #25252d;
+            color: #f4f4f8;
+            border: 1px solid #363642;
+            border-radius: 10px;
+            padding: 10px 12px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+
+        .btn-primary {
+            background: #e63946;
+            border-color: #e63946;
+            color: #ffffff;
+        }
+
+        .stage {
+            position: sticky;
+            top: 6px;
+            z-index: 20;
+            width: 100%;
+            aspect-ratio: 4 / 5;
+            max-height: 290px;
+            background: #121216;
+            border: 1px solid #383844;
+            border-radius: 14px;
+            overflow: hidden;
+            touch-action: none;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.55);
+        }
+
+        #bodyImg,
+        #cameraVideo {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+            z-index: 1;
+        }
+
+        #cameraVideo {
+            display: none;
+            z-index: 2;
+        }
+
+        .stage.camera-on #cameraVideo {
+            display: block;
+        }
+
+        .stage.camera-on #bodyImg {
+            display: none;
+        }
+
+        .camera-bar {
+            position: absolute;
+            bottom: 8px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 10;
+            display: none;
+            gap: 8px;
+        }
+
+        .stage.camera-on .camera-bar {
+            display: flex;
+        }
+
+        #tattooLayer {
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%) rotate(0deg);
+            transform-origin: center center;
+            z-index: 5;
+            cursor: grab;
+            touch-action: none;
+            user-select: none;
+        }
+
+        #tattooImg {
+            display: block;
+            width: 140px;
+            height: auto;
+            max-width: none;
+            pointer-events: none;
+            mix-blend-mode: multiply;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 8px;
+            overflow-x: auto;
+            padding-bottom: 2px;
+        }
+
+        .tab {
+            flex: 0 0 auto;
+            background: #25252d;
+            color: #b4b4c4;
+            border: 1px solid #363642;
+            border-radius: 999px;
+            padding: 7px 14px;
+            font-size: 0.84rem;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        .tab.active {
+            background: #e63946;
+            border-color: #e63946;
+            color: #ffffff;
+        }
+
+        .gallery {
+            display: flex;
+            gap: 8px;
+            overflow-x: auto;
+            padding: 4px 0;
+        }
+
+        .thumb {
+            flex: 0 0 68px;
+            width: 68px;
+            height: 68px;
+            background: #ffffff;
+            border: 2px solid #363642;
+            border-radius: 10px;
+            padding: 4px;
+            cursor: pointer;
+        }
+
+        .thumb.active {
+            border-color: #ff5964;
+        }
+
+        .thumb img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            display: block;
+        }
+
+        .panel {
+            background: #222229;
+            border: 1px solid #32323d;
+            border-radius: 12px;
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        .ctrl {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .ctrl label {
+            font-size: 0.8rem;
+            color: #b4b4c4;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .ctrl label span {
+            color: #ffffff;
+            font-weight: 700;
+        }
+
+        input[type="range"] {
+            width: 100%;
+            accent-color: #e63946;
+        }
+
+        select {
+            width: 100%;
+            background: #15151a;
+            color: #f4f4f8;
+            border: 1px solid #363642;
+            border-radius: 8px;
+            padding: 8px;
+            font-size: 0.86rem;
+        }
+
+        .preset-row {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+
+        .chip {
+            background: #15151a;
+            color: #f4f4f8;
+            border: 1px solid #363642;
+            border-radius: 999px;
+            padding: 5px 10px;
+            font-size: 0.78rem;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .chip.active {
+            background: #e63946;
+            border-color: #e63946;
+            color: #ffffff;
+        }
+
+        @media (max-width: 400px) {
+            .grid-2 {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
 </head>
 <body>
     <div class="app">
@@ -123,6 +436,11 @@
                     <label>Mazanie bielej <span id="cutVal">215</span></label>
                     <input type="range" id="cutRange" min="0" max="255" value="215" />
                 </div>
+
+                <div class="ctrl">
+                    <label>Zjemnenie bokov <span id="edgeVal">28%</span></label>
+                    <input type="range" id="edgeRange" min="0" max="60" value="28" />
+                </div>
             </div>
         </div>
 
@@ -136,6 +454,485 @@
         </div>
     </div>
 
-    <script src="app.js?v=30"></script>
+    <script>
+        function makeHandPng() {
+            const c = document.createElement("canvas");
+            c.width = 500;
+            c.height = 625;
+            const ctx = c.getContext("2d");
+            ctx.fillStyle = "#19191e";
+            ctx.fillRect(0, 0, 500, 625);
+            ctx.fillStyle = "#d9a282";
+            ctx.beginPath();
+            ctx.moveTo(180, 625);
+            ctx.lineTo(200, 270);
+            ctx.lineTo(220, 110);
+            ctx.lineTo(245, 110);
+            ctx.lineTo(255, 190);
+            ctx.lineTo(270, 95);
+            ctx.lineTo(295, 95);
+            ctx.lineTo(295, 200);
+            ctx.lineTo(315, 115);
+            ctx.lineTo(340, 120);
+            ctx.lineTo(315, 280);
+            ctx.lineTo(330, 625);
+            ctx.closePath();
+            ctx.fill();
+            return c.toDataURL("image/png");
+        }
+
+        function makeMotifPng(type) {
+            const c = document.createElement("canvas");
+            c.width = 300;
+            c.height = 300;
+            const ctx = c.getContext("2d");
+            ctx.clearRect(0, 0, 300, 300);
+            ctx.save();
+            ctx.translate(150, 150);
+            ctx.strokeStyle = "#141414";
+            ctx.fillStyle = "#2b2b2b";
+            ctx.lineWidth = 4;
+
+            if (type === "rose") {
+                for (let i = 0; i < 6; i++) {
+                    ctx.save();
+                    ctx.rotate((i * Math.PI) / 3);
+                    ctx.beginPath();
+                    ctx.ellipse(0, -38, 30, 46, 0, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.stroke();
+                    ctx.restore();
+                }
+                ctx.fillStyle = "#111111";
+                ctx.beginPath();
+                ctx.arc(0, 0, 20, 0, Math.PI * 2);
+                ctx.fill();
+            } else if (type === "geo") {
+                ctx.beginPath();
+                ctx.arc(0, 0, 95, 0, Math.PI * 2);
+                ctx.stroke();
+                ctx.beginPath();
+                ctx.moveTo(0, -90);
+                ctx.lineTo(78, 48);
+                ctx.lineTo(-78, 48);
+                ctx.closePath();
+                ctx.stroke();
+            } else if (type === "line") {
+                ctx.lineWidth = 2.5;
+                ctx.beginPath();
+                ctx.moveTo(0, -105);
+                ctx.lineTo(18, -18);
+                ctx.lineTo(105, 0);
+                ctx.lineTo(18, 18);
+                ctx.lineTo(0, 105);
+                ctx.lineTo(-18, 18);
+                ctx.lineTo(-105, 0);
+                ctx.lineTo(-18, -18);
+                ctx.closePath();
+                ctx.stroke();
+            } else {
+                ctx.beginPath();
+                ctx.moveTo(-85, 20);
+                ctx.quadraticCurveTo(-30, -55, 15, -10);
+                ctx.quadraticCurveTo(50, -55, 85, -10);
+                ctx.quadraticCurveTo(40, 25, 20, 50);
+                ctx.closePath();
+                ctx.fill();
+            }
+            ctx.restore();
+            return c.toDataURL("image/png");
+        }
+
+        function processMotifImage(rawSrc, whiteThreshold, edgeSoftPct) {
+            return new Promise((resolve) => {
+                const img = new Image();
+                img.onload = () => {
+                    const w = img.naturalWidth || 300;
+                    const h = img.naturalHeight || 300;
+                    const c = document.createElement("canvas");
+                    c.width = w;
+                    c.height = h;
+                    const ctx = c.getContext("2d");
+                    ctx.drawImage(img, 0, 0, w, h);
+
+                    try {
+                        if (whiteThreshold > 0) {
+                            const frame = ctx.getImageData(0, 0, w, h);
+                            const d = frame.data;
+                            for (let i = 0; i < d.length; i += 4) {
+                                const a = d[i + 3];
+                                if (a > 0) {
+                                    const minCh = Math.min(d[i], d[i + 1], d[i + 2]);
+                                    const avgCh = (d[i] + d[i + 1] + d[i + 2]) / 3;
+                                    if (avgCh >= whiteThreshold && minCh >= whiteThreshold - 25) {
+                                        d[i + 3] = 0;
+                                    }
+                                }
+                            }
+                            ctx.putImageData(frame, 0, 0);
+                        }
+
+                        if (edgeSoftPct > 0) {
+                            const fade = Math.min(0.49, edgeSoftPct / 100);
+                            ctx.save();
+                            ctx.globalCompositeOperation = "destination-in";
+
+                            const gradX = ctx.createLinearGradient(0, 0, w, 0);
+                            gradX.addColorStop(0, "rgba(0,0,0,0)");
+                            gradX.addColorStop(fade, "rgba(0,0,0,1)");
+                            gradX.addColorStop(1 - fade, "rgba(0,0,0,1)");
+                            gradX.addColorStop(1, "rgba(0,0,0,0)");
+                            ctx.fillStyle = gradX;
+                            ctx.fillRect(0, 0, w, h);
+
+                            const gradY = ctx.createLinearGradient(0, 0, 0, h);
+                            gradY.addColorStop(0, "rgba(0,0,0,0)");
+                            gradY.addColorStop(fade, "rgba(0,0,0,1)");
+                            gradY.addColorStop(1 - fade, "rgba(0,0,0,1)");
+                            gradY.addColorStop(1, "rgba(0,0,0,0)");
+                            ctx.fillStyle = gradY;
+                            ctx.fillRect(0, 0, w, h);
+
+                            ctx.restore();
+                        }
+
+                        resolve(c.toDataURL("image/png"));
+                    } catch (_) {
+                        resolve(rawSrc);
+                    }
+                };
+                img.onerror = () => resolve(rawSrc);
+                img.src = rawSrc;
+            });
+        }
+
+        function initApp() {
+            const MOTIFS = [
+                { id: 1, name: "Ruza", style: "realism", complexity: 1.35, rawSrc: makeMotifPng("rose"), src: makeMotifPng("rose") },
+                { id: 2, name: "Geo", style: "blackwork", complexity: 1.4, rawSrc: makeMotifPng("geo"), src: makeMotifPng("geo") },
+                { id: 3, name: "Line", style: "fineline", complexity: 1.1, rawSrc: makeMotifPng("line"), src: makeMotifPng("line") },
+                { id: 4, name: "Vlna", style: "japanese", complexity: 1.45, rawSrc: makeMotifPng("wave"), src: makeMotifPng("wave") }
+            ];
+
+            const state = {
+                style: "all",
+                motif: MOTIFS[0],
+                x: 0,
+                y: 0,
+                sizeCm: 15,
+                rotation: 0,
+                opacity: 0.9,
+                blur: 0.5,
+                contrast: 165,
+                brightness: 98,
+                whiteCutoff: 215,
+                edgeSoft: 28,
+                blend: "multiply",
+                skinFilter: "none",
+                stream: null
+            };
+
+            const statusBox = document.getElementById("statusBox");
+            const stage = document.getElementById("stage");
+            const bodyImg = document.getElementById("bodyImg");
+            const cameraVideo = document.getElementById("cameraVideo");
+            const tattooLayer = document.getElementById("tattooLayer");
+            const tattooImg = document.getElementById("tattooImg");
+            const gallery = document.getElementById("gallery");
+            const priceDisplay = document.getElementById("priceDisplay");
+            const cameraBtn = document.getElementById("cameraBtn");
+            const snapBtn = document.getElementById("snapBtn");
+            const closeCamBtn = document.getElementById("closeCamBtn");
+            const bodyFileInput = document.getElementById("bodyFileInput");
+            const tattooFileInput = document.getElementById("tattooFileInput");
+            const saveBtn = document.getElementById("saveBtn");
+
+            if (bodyImg) bodyImg.src = makeHandPng();
+            if (tattooImg) tattooImg.src = state.motif.src;
+
+            function showStatus(msg) {
+                if (!statusBox) return;
+                statusBox.textContent = msg;
+                statusBox.style.display = msg ? "block" : "none";
+            }
+
+            function updatePrice() {
+                if (!priceDisplay) return;
+                const ratio = (state.sizeCm - 5) / 30;
+                const euros = Math.max(50, Math.min(300, Math.round((50 + ratio * 185 * (state.motif.complexity || 1.2)) / 5) * 5));
+                priceDisplay.textContent = `Odhad ceny: ${euros} €`;
+            }
+
+            function applyView() {
+                if (tattooImg) {
+                    const w = Math.round(70 + ((state.sizeCm - 5) / 30) * 230);
+                    tattooImg.style.width = `${w}px`;
+                    tattooImg.style.mixBlendMode = state.blend;
+                    tattooImg.style.opacity = String(state.opacity);
+                    tattooImg.style.filter = `blur(${state.blur}px) contrast(${state.contrast}%) brightness(${state.brightness}%)`;
+                }
+                if (tattooLayer) {
+                    tattooLayer.style.transform = `translate(calc(-50% + ${state.x}px), calc(-50% + ${state.y}px)) rotate(${state.rotation}deg)`;
+                }
+                if (bodyImg) bodyImg.style.filter = state.skinFilter;
+                if (cameraVideo) cameraVideo.style.filter = state.skinFilter;
+
+                const labels = {
+                    sizeVal: `${state.sizeCm} cm`,
+                    rotVal: `${state.rotation}°`,
+                    opVal: `${Math.round(state.opacity * 100)}%`,
+                    blurVal: `${state.blur}px`,
+                    conVal: `${state.contrast}%`,
+                    briVal: `${state.brightness}%`,
+                    cutVal: `${state.whiteCutoff}`,
+                    edgeVal: `${state.edgeSoft}%`
+                };
+                Object.keys(labels).forEach(id => {
+                    const el = document.getElementById(id);
+                    if (el) el.textContent = labels[id];
+                });
+                updatePrice();
+            }
+
+            async function refreshMotifImage() {
+                const processed = await processMotifImage(state.motif.rawSrc, state.whiteCutoff, state.edgeSoft);
+                state.motif.src = processed;
+                if (tattooImg) tattooImg.src = processed;
+            }
+
+            function renderGallery() {
+                if (!gallery) return;
+                gallery.innerHTML = "";
+                const items = state.style === "all" ? MOTIFS : MOTIFS.filter(m => m.style === state.style);
+                items.forEach(m => {
+                    const card = document.createElement("div");
+                    card.className = "thumb" + (state.motif.id === m.id ? " active" : "");
+                    const img = document.createElement("img");
+                    img.src = m.src;
+                    img.alt = m.name;
+                    card.appendChild(img);
+                    card.addEventListener("click", async () => {
+                        state.motif = m;
+                        await refreshMotifImage();
+                        renderGallery();
+                        updatePrice();
+                    });
+                    gallery.appendChild(card);
+                });
+            }
+
+            function stopCamera() {
+                if (state.stream) {
+                    state.stream.getTracks().forEach(t => t.stop());
+                    state.stream = null;
+                }
+                if (stage) stage.classList.remove("camera-on");
+            }
+
+            if (cameraBtn) {
+                cameraBtn.addEventListener("click", async () => {
+                    showStatus("");
+                    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                        showStatus("Živá kamera tu nie je podporovaná. Použi tlačidlo Nahrať fotku.");
+                        return;
+                    }
+                    try {
+                        stopCamera();
+                        const stream = await navigator.mediaDevices.getUserMedia({
+                            video: { facingMode: "environment" },
+                            audio: false
+                        });
+                        state.stream = stream;
+                        if (cameraVideo) {
+                            cameraVideo.srcObject = stream;
+                            await cameraVideo.play();
+                        }
+                        if (stage) stage.classList.add("camera-on");
+                    } catch (err) {
+                        showStatus("Kamera nešla spustiť: " + (err && err.message ? err.message : "skontroluj povolenie kamery v prehliadači."));
+                    }
+                });
+            }
+
+            if (closeCamBtn) {
+                closeCamBtn.addEventListener("click", () => {
+                    stopCamera();
+                    showStatus("");
+                });
+            }
+
+            if (snapBtn) {
+                snapBtn.addEventListener("click", () => {
+                    const w = (cameraVideo && cameraVideo.videoWidth) || 600;
+                    const h = (cameraVideo && cameraVideo.videoHeight) || 750;
+                    const c = document.createElement("canvas");
+                    c.width = w;
+                    c.height = h;
+                    if (cameraVideo) c.getContext("2d").drawImage(cameraVideo, 0, 0, w, h);
+                    if (bodyImg) bodyImg.src = c.toDataURL("image/jpeg", 0.92);
+                    stopCamera();
+                });
+            }
+
+            if (bodyFileInput) {
+                bodyFileInput.addEventListener("change", e => {
+                    const file = e.target.files && e.target.files[0];
+                    if (!file) return;
+                    stopCamera();
+                    showStatus("");
+                    const reader = new FileReader();
+                    reader.onload = () => {
+                        if (bodyImg) bodyImg.src = reader.result;
+                    };
+                    reader.readAsDataURL(file);
+                    e.target.value = "";
+                });
+            }
+
+            if (tattooFileInput) {
+                tattooFileInput.addEventListener("change", e => {
+                    const file = e.target.files && e.target.files[0];
+                    if (!file) return;
+                    showStatus("");
+                    const reader = new FileReader();
+                    reader.onload = async () => {
+                        const raw = reader.result;
+                        const cleaned = await processMotifImage(raw, state.whiteCutoff, state.edgeSoft);
+                        const custom = { id: Date.now(), name: file.name, style: "all", complexity: 1.25, rawSrc: raw, src: cleaned };
+                        MOTIFS.unshift(custom);
+                        state.motif = custom;
+                        if (tattooImg) tattooImg.src = cleaned;
+                        renderGallery();
+                        updatePrice();
+                    };
+                    reader.readAsDataURL(file);
+                    e.target.value = "";
+                });
+            }
+
+            document.querySelectorAll(".tab").forEach(tab => {
+                tab.addEventListener("click", () => {
+                    document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
+                    tab.classList.add("active");
+                    state.style = tab.dataset.style || "all";
+                    renderGallery();
+                });
+            });
+
+            document.querySelectorAll(".chip").forEach(chip => {
+                chip.addEventListener("click", async () => {
+                    document.querySelectorAll(".chip").forEach(c => c.classList.remove("active"));
+                    chip.classList.add("active");
+                    const p = chip.dataset.preset;
+                    if (p === "noWhite") { state.blend = "multiply"; state.opacity = 0.92; state.blur = 0.5; state.contrast = 175; state.brightness = 96; state.whiteCutoff = 215; state.edgeSoft = 28; }
+                    else if (p === "fresh") { state.blend = "multiply"; state.opacity = 0.88; state.blur = 0.6; state.contrast = 155; state.brightness = 98; state.whiteCutoff = 225; state.edgeSoft = 24; }
+                    else if (p === "healed") { state.blend = "multiply"; state.opacity = 0.7; state.blur = 1.2; state.contrast = 135; state.brightness = 102; state.whiteCutoff = 230; state.edgeSoft = 34; }
+                    else if (p === "vintage") { state.blend = "multiply"; state.opacity = 0.62; state.blur = 1.0; state.contrast = 125; state.brightness = 104; state.whiteCutoff = 235; state.edgeSoft = 36; }
+                    else if (p === "soft") { state.blend = "multiply"; state.opacity = 0.58; state.blur = 1.8; state.contrast = 120; state.brightness = 104; state.whiteCutoff = 230; state.edgeSoft = 40; }
+                    else if (p === "bold") { state.blend = "color-burn"; state.opacity = 0.94; state.blur = 0.4; state.contrast = 200; state.brightness = 94; state.whiteCutoff = 210; state.edgeSoft = 22; }
+                    else if (p === "faded") { state.blend = "multiply"; state.opacity = 0.45; state.blur = 1.5; state.contrast = 110; state.brightness = 108; state.whiteCutoff = 235; state.edgeSoft = 38; }
+                    else if (p === "sharp") { state.blend = "multiply"; state.opacity = 0.92; state.blur = 0.0; state.contrast = 190; state.brightness = 96; state.whiteCutoff = 210; state.edgeSoft = 15; }
+
+                    const bs = document.getElementById("blendSelect");
+                    if (bs) bs.value = state.blend;
+                    const setVal = (id, v) => { const n = document.getElementById(id); if (n) n.value = v; };
+                    setVal("opRange", Math.round(state.opacity * 100));
+                    setVal("blurRange", state.blur);
+                    setVal("conRange", state.contrast);
+                    setVal("briRange", state.brightness);
+                    setVal("cutRange", state.whiteCutoff);
+                    setVal("edgeRange", state.edgeSoft);
+                    await refreshMotifImage();
+                    renderGallery();
+                    applyView();
+                });
+            });
+
+            const bind = (id, fn) => {
+                const n = document.getElementById(id);
+                if (n) n.addEventListener(n.tagName === "SELECT" ? "change" : "input", () => fn(n.value));
+            };
+            bind("blendSelect", v => { state.blend = v; applyView(); });
+            bind("skinFilterSelect", v => { state.skinFilter = v; applyView(); });
+            bind("sizeRange", v => { state.sizeCm = Number(v); applyView(); });
+            bind("rotRange", v => { state.rotation = Number(v); applyView(); });
+            bind("opRange", v => { state.opacity = Number(v) / 100; applyView(); });
+            bind("blurRange", v => { state.blur = Number(v); applyView(); });
+            bind("conRange", v => { state.contrast = Number(v); applyView(); });
+            bind("briRange", v => { state.brightness = Number(v); applyView(); });
+            bind("cutRange", async v => {
+                state.whiteCutoff = Number(v);
+                applyView();
+                await refreshMotifImage();
+                renderGallery();
+            });
+            bind("edgeRange", async v => {
+                state.edgeSoft = Number(v);
+                applyView();
+                await refreshMotifImage();
+                renderGallery();
+            });
+
+            if (tattooLayer) {
+                let drag = null;
+                tattooLayer.addEventListener("pointerdown", e => {
+                    e.preventDefault();
+                    tattooLayer.setPointerCapture(e.pointerId);
+                    drag = { x: e.clientX - state.x, y: e.clientY - state.y };
+                });
+                tattooLayer.addEventListener("pointermove", e => {
+                    if (!drag) return;
+                    state.x = Math.round(e.clientX - drag.x);
+                    state.y = Math.round(e.clientY - drag.y);
+                    applyView();
+                });
+                tattooLayer.addEventListener("pointerup", () => { drag = null; });
+                tattooLayer.addEventListener("pointercancel", () => { drag = null; });
+            }
+
+            if (saveBtn && stage) {
+                saveBtn.addEventListener("click", () => {
+                    const rect = stage.getBoundingClientRect();
+                    const out = document.createElement("canvas");
+                    out.width = Math.round(rect.width * 2);
+                    out.height = Math.round(rect.height * 2);
+                    const ctx = out.getContext("2d");
+                    ctx.scale(2, 2);
+                    ctx.filter = state.skinFilter || "none";
+                    if (bodyImg && bodyImg.complete && bodyImg.naturalWidth) {
+                        ctx.drawImage(bodyImg, 0, 0, rect.width, rect.height);
+                    }
+                    if (tattooImg && tattooImg.complete && tattooImg.naturalWidth) {
+                        ctx.save();
+                        const cx = rect.width / 2 + state.x;
+                        const cy = rect.height / 2 + state.y;
+                        const w = tattooImg.getBoundingClientRect().width;
+                        const ratio = tattooImg.naturalWidth ? tattooImg.naturalHeight / tattooImg.naturalWidth : 1;
+                        const h = w * ratio;
+                        ctx.translate(cx, cy);
+                        ctx.rotate((state.rotation * Math.PI) / 180);
+                        ctx.globalCompositeOperation = state.blend === "normal" ? "source-over" : state.blend;
+                        ctx.globalAlpha = state.opacity;
+                        ctx.filter = `blur(${state.blur}px) contrast(${state.contrast}%) brightness(${state.brightness}%)`;
+                        ctx.drawImage(tattooImg, -w / 2, -h / 2, w, h);
+                        ctx.restore();
+                    }
+                    const a = document.createElement("a");
+                    a.download = "inkpreview.png";
+                    a.href = out.toDataURL("image/png");
+                    a.click();
+                });
+            }
+
+            renderGallery();
+            applyView();
+        }
+
+        if (document.readyState === "loading") {
+            document.addEventListener("DOMContentLoaded", initApp);
+        } else {
+            initApp();
+        }
+    </script>
 </body>
 </html>
