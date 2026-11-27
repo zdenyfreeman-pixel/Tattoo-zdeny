@@ -14,23 +14,17 @@
         </header>
 
         <div class="row-actions">
-            <button type="button" class="btn" id="cameraBtn">📷 Odfotiť telo</button>
+            <label class="btn btn-primary" for="cameraInput">📷 Odfotiť telo</label>
+            <input type="file" id="cameraInput" accept="image/*" capture="environment" />
+
             <label class="btn" for="bodyFileInput">🖼️ Nahrať fotku</label>
             <input type="file" id="bodyFileInput" accept="image/*" />
         </div>
 
-        <!-- LEN JEDEN NÁHĽADOVÝ RÁM -->
         <div class="stage" id="stage">
-            <img id="bodyImg" alt="Fotka tela" />
-            <video id="cameraVideo" playsinline autoplay muted></video>
-
+            <img id="bodyImg" alt="Náhľad tela" />
             <div id="tattooLayer">
-                <img id="tattooImg" alt="Tetovanie" />
-            </div>
-
-            <div class="camera-bar">
-                <button type="button" class="btn btn-primary" id="snapBtn">📸 Spraviť fotku</button>
-                <button type="button" class="btn" id="closeCamBtn">✖ Zavrieť</button>
+                <img id="tattooImg" alt="Náhľad motívu" />
             </div>
         </div>
 
@@ -46,39 +40,37 @@
 
         <div class="panel">
             <div class="ctrl">
-                <label>Rýchle filtre tetovania</label>
+                <label>Rýchle filtre</label>
                 <div class="preset-row" id="presetChips">
                     <button type="button" class="chip active" data-preset="fresh">Čerstvý atrament</button>
+                    <button type="button" class="chip" data-preset="noWhite">Bez bieleho pozadia</button>
                     <button type="button" class="chip" data-preset="healed">Zahojené</button>
-                    <button type="button" class="chip" data-preset="vintage">Starší atrament</button>
-                    <button type="button" class="chip" data-preset="noWhite">Čistý čierny (bez bielej)</button>
-                    <button type="button" class="chip" data-preset="softShadow">Jemný tieň</button>
-                    <button type="button" class="chip" data-preset="highInk">Silný kontrast</button>
+                    <button type="button" class="chip" data-preset="soft">Jemný tieň</button>
+                    <button type="button" class="chip" data-preset="bold">Výrazný čierny</button>
                 </div>
             </div>
 
             <div class="grid-2">
                 <div class="ctrl">
-                    <label>Režim splynutia <span>(koža)</span></label>
+                    <label>Režim splynutia</label>
                     <select id="blendSelect">
-                        <option value="multiply" selected>Multiply (odstráni bielu)</option>
-                        <option value="darken">Darken (tmavý atrament)</option>
-                        <option value="color-burn">Color Burn (hlboký tieň)</option>
-                        <option value="hard-light">Hard Light (výrazný)</option>
-                        <option value="overlay">Overlay (splývavý)</option>
-                        <option value="normal">Normal (plný obrázok)</option>
+                        <option value="multiply" selected>Multiply (bez bielej)</option>
+                        <option value="darken">Darken</option>
+                        <option value="color-burn">Color Burn</option>
+                        <option value="hard-light">Hard Light</option>
+                        <option value="overlay">Overlay</option>
+                        <option value="normal">Normal</option>
                     </select>
                 </div>
 
                 <div class="ctrl">
-                    <label>Filter pokožky / náhľadu</label>
+                    <label>Filter pokožky</label>
                     <select id="skinFilterSelect">
                         <option value="none" selected>Prirodzená koža</option>
-                        <option value="grayscale(100%) contrast(112%)">Čiernobiely tón (B&W)</option>
-                        <option value="sepia(35%) contrast(108%)">Teplý tón pokožky</option>
-                        <option value="contrast(120%) saturate(90%)">Vyšší kontrast</option>
-                        <option value="brightness(94%) contrast(115%)">Tlmené svetlo</option>
-                        <option value="hue-rotate(-10deg) saturate(110%)">Chladnejší tón</option>
+                        <option value="grayscale(100%) contrast(112%)">Čiernobiely (B&amp;W)</option>
+                        <option value="sepia(30%) contrast(108%)">Teplý tón</option>
+                        <option value="contrast(120%)">Vyšší kontrast</option>
+                        <option value="brightness(94%) contrast(112%)">Tlmené svetlo</option>
                     </select>
                 </div>
             </div>
@@ -95,7 +87,7 @@
                 </div>
 
                 <div class="ctrl">
-                    <label>Krytie atramentu <span id="opVal">85%</span></label>
+                    <label>Krytie <span id="opVal">85%</span></label>
                     <input type="range" id="opRange" min="15" max="100" value="85" />
                 </div>
 
@@ -105,23 +97,13 @@
                 </div>
 
                 <div class="ctrl">
-                    <label>Kontrast motívu <span id="conVal">125%</span></label>
-                    <input type="range" id="conRange" min="60" max="220" value="125" />
+                    <label>Kontrast <span id="conVal">140%</span></label>
+                    <input type="range" id="conRange" min="60" max="240" value="140" />
                 </div>
 
                 <div class="ctrl">
-                    <label>Jas motívu <span id="briVal">100%</span></label>
+                    <label>Jas <span id="briVal">100%</span></label>
                     <input type="range" id="briRange" min="60" max="150" value="100" />
-                </div>
-
-                <div class="ctrl">
-                    <label>Sýtosť motívu <span id="satVal">100%</span></label>
-                    <input type="range" id="satRange" min="0" max="180" value="100" />
-                </div>
-
-                <div class="ctrl">
-                    <label>Zaoblenie okrajov <span id="radVal">12px</span></label>
-                    <input type="range" id="radRange" min="0" max="60" value="12" />
                 </div>
             </div>
         </div>
@@ -129,6 +111,7 @@
         <div class="row-actions">
             <label class="btn" for="tattooFileInput">+ Vlastný motív</label>
             <input type="file" id="tattooFileInput" accept="image/*" />
+
             <button type="button" class="btn btn-primary" id="saveBtn">💾 Uložiť náhľad</button>
         </div>
     </div>
