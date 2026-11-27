@@ -1,47 +1,58 @@
+:root {
+    --bg: #0f0f12;
+    --panel: #19191e;
+    --panel-2: #24242c;
+    --accent: #e63946;
+    --accent-2: #ff5964;
+    --text: #f4f4f8;
+    --muted: #a6a6b5;
+    --border: #2f2f3a;
+}
+
 * {
     box-sizing: border-box;
     margin: 0;
     padding: 0;
     font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    -webkit-tap-highlight-color: transparent;
 }
 
 body {
-    background: #121214;
-    color: #f1faee;
+    background: var(--bg);
+    color: var(--text);
     min-height: 100vh;
+    display: flex;
+    justify-content: center;
 }
 
-#app,
-.app,
-.app-container,
-main {
+.app {
     width: 100%;
     max-width: 540px;
-    margin: 0 auto;
     min-height: 100vh;
-    background: #1b1b1f;
+    background: var(--panel);
     display: flex;
     flex-direction: column;
     gap: 10px;
     padding: 12px;
 }
 
-header,
-.header,
-.top-bar {
+.topbar {
     display: flex;
     align-items: center;
     justify-content: space-between;
     gap: 8px;
 }
 
-#priceBox,
-#priceDisplay,
-.price,
-.price-badge {
-    background: #2a181c;
-    border: 1px solid #e63946;
-    color: #ffd6db;
+.brand {
+    font-size: 1.15rem;
+    font-weight: 800;
+    letter-spacing: 0.5px;
+}
+
+.price-pill {
+    background: rgba(230, 57, 70, 0.18);
+    border: 1px solid var(--accent);
+    color: #ffd6da;
     padding: 6px 12px;
     border-radius: 999px;
     font-weight: 700;
@@ -49,24 +60,20 @@ header,
     white-space: nowrap;
 }
 
-.controls-top,
-.top-actions,
-.photo-actions,
-.camera-controls {
-    display: flex;
+.row-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
     gap: 8px;
-    flex-wrap: wrap;
 }
 
-button,
-.btn,
-label.btn {
-    background: #292930;
-    color: #f1faee;
-    border: 1px solid #3a3a44;
-    border-radius: 8px;
-    padding: 9px 12px;
+.btn {
+    background: var(--panel-2);
+    color: var(--text);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 10px 12px;
     font-size: 0.9rem;
+    font-weight: 600;
     cursor: pointer;
     display: inline-flex;
     align-items: center;
@@ -74,157 +81,222 @@ label.btn {
     gap: 6px;
 }
 
-button.primary,
-button.active,
-.btn-primary,
-.tab.active,
-#saveBtn,
-#saveResultBtn {
-    background: #e63946;
-    border-color: #e63946;
-    color: #ffffff;
-    font-weight: 600;
+.btn:active {
+    transform: scale(0.98);
 }
 
-#canvasWrapper,
-#previewArea,
-.preview-box,
-.canvas-wrap {
+.btn-primary {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #fff;
+}
+
+/* JEDEN ČISTÝ RÁM NÁHĽADU */
+.stage {
     position: relative;
     width: 100%;
-    min-height: 300px;
-    max-height: 440px;
-    background: #101013;
-    border-radius: 10px;
+    aspect-ratio: 4 / 5;
+    max-height: 430px;
+    background: #121216;
+    border: 1px solid var(--border);
+    border-radius: 14px;
     overflow: hidden;
-    display: flex;
-    align-items: center;
-    justify-content: center;
     touch-action: none;
 }
 
-#bodyImage,
-#cameraStream,
-.body-img {
+#bodyImg,
+#cameraVideo {
+    position: absolute;
+    inset: 0;
     width: 100%;
-    max-height: 440px;
+    height: 100%;
     object-fit: cover;
+    display: block;
+    z-index: 1;
+}
+
+#cameraVideo {
+    display: none;
+    z-index: 2;
+}
+
+.stage.camera-on #cameraVideo {
     display: block;
 }
 
-#tattooLayer,
-.tattoo-layer {
+.stage.camera-on #bodyImg {
+    display: none;
+}
+
+#tattooLayer {
     position: absolute;
     left: 50%;
     top: 50%;
-    transform: translate(-50%, -50%);
+    transform: translate(-50%, -50%) scale(1) rotate(0deg);
+    transform-origin: center center;
+    z-index: 4;
+    cursor: grab;
     touch-action: none;
-    z-index: 5;
+    user-select: none;
 }
 
-#tattooImg,
-.tattoo-img {
+#tattooLayer:active {
+    cursor: grabbing;
+}
+
+#tattooImg {
     display: block;
+    width: 150px;
+    height: auto;
     max-width: none;
     pointer-events: none;
+    mix-blend-mode: multiply;
 }
 
-.tabs,
-.style-tabs,
-.categories {
+.camera-bar {
+    position: absolute;
+    bottom: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 6;
+    display: none;
+    gap: 8px;
+}
+
+.stage.camera-on .camera-bar {
+    display: flex;
+}
+
+/* ŠTÝLY A GALÉRIA */
+.tabs {
     display: flex;
     gap: 8px;
     overflow-x: auto;
-    padding-bottom: 4px;
+    padding-bottom: 2px;
 }
 
-.tab,
-.style-tab {
+.tab {
     flex: 0 0 auto;
-    padding: 7px 13px;
+    background: var(--panel-2);
+    color: var(--muted);
+    border: 1px solid var(--border);
     border-radius: 999px;
-    font-size: 0.85rem;
+    padding: 7px 14px;
+    font-size: 0.84rem;
+    font-weight: 700;
+    cursor: pointer;
 }
 
-#tattooGallery,
-.gallery,
-.motifs {
+.tab.active {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #fff;
+}
+
+.gallery {
     display: flex;
     gap: 8px;
     overflow-x: auto;
     padding: 4px 0;
 }
 
-.tattoo-item,
-.tattoo-thumb,
-.motif-card {
-    flex: 0 0 68px;
-    width: 68px;
-    height: 68px;
+.thumb {
+    flex: 0 0 72px;
+    width: 72px;
+    height: 72px;
     background: #ffffff;
-    border-radius: 8px;
-    border: 2px solid transparent;
-    overflow: hidden;
-    padding: 4px;
+    border: 2px solid var(--border);
+    border-radius: 10px;
+    padding: 5px;
     cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
-.tattoo-item.active,
-.tattoo-thumb.active,
-.tattoo-thumb.selected,
-.motif-card.active {
-    border-color: #e63946;
+.thumb.active {
+    border-color: var(--accent-2);
+    box-shadow: 0 0 0 2px rgba(230, 57, 70, 0.35);
 }
 
-.tattoo-item img,
-.tattoo-thumb img,
-.motif-card img {
+.thumb img {
     width: 100%;
     height: 100%;
     object-fit: contain;
     display: block;
 }
 
-.sliders,
-.sliders-grid,
-.controls-grid {
+/* PANEL FILTROV A POSUVNÍKOV */
+.panel {
+    background: var(--panel-2);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.grid-2 {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 10px;
 }
 
-.control,
-.slider-group,
-.control-group {
+.ctrl {
     display: flex;
     flex-direction: column;
     gap: 4px;
-    font-size: 0.82rem;
-    color: #c7c7d1;
+}
+
+.ctrl label {
+    font-size: 0.8rem;
+    color: var(--muted);
+    display: flex;
+    justify-content: space-between;
+}
+
+.ctrl label span {
+    color: var(--text);
+    font-weight: 700;
 }
 
 input[type="range"] {
     width: 100%;
-    accent-color: #e63946;
+    accent-color: var(--accent);
 }
 
 select {
     width: 100%;
-    background: #292930;
-    color: #f1faee;
-    border: 1px solid #3a3a44;
+    background: #16161b;
+    color: var(--text);
+    border: 1px solid var(--border);
     border-radius: 8px;
     padding: 8px;
-    font-size: 0.88rem;
+    font-size: 0.86rem;
 }
 
-.bottom-actions,
-.footer-actions,
-.actions-bottom {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 8px;
-    margin-top: 4px;
+.preset-row {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+}
+
+.chip {
+    background: #16161b;
+    color: var(--text);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    padding: 5px 10px;
+    font-size: 0.78rem;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.chip.active {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #fff;
 }
 
 input[type="file"] {
@@ -232,9 +304,7 @@ input[type="file"] {
 }
 
 @media (max-width: 400px) {
-    .sliders,
-    .sliders-grid,
-    .controls-grid {
+    .grid-2 {
         grid-template-columns: 1fr;
     }
 }
