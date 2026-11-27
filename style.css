@@ -1,25 +1,13 @@
-:root {
-    --bg: #0f0f12;
-    --panel: #19191e;
-    --panel-2: #24242c;
-    --accent: #e63946;
-    --accent-2: #ff5964;
-    --text: #f4f4f8;
-    --muted: #a6a6b5;
-    --border: #2f2f3a;
-}
-
 * {
     box-sizing: border-box;
     margin: 0;
     padding: 0;
     font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-    -webkit-tap-highlight-color: transparent;
 }
 
 body {
-    background: var(--bg);
-    color: var(--text);
+    background: #0f0f12;
+    color: #f4f4f8;
     min-height: 100vh;
     display: flex;
     justify-content: center;
@@ -29,7 +17,7 @@ body {
     width: 100%;
     max-width: 540px;
     min-height: 100vh;
-    background: var(--panel);
+    background: #19191e;
     display: flex;
     flex-direction: column;
     gap: 10px;
@@ -46,18 +34,16 @@ body {
 .brand {
     font-size: 1.15rem;
     font-weight: 800;
-    letter-spacing: 0.5px;
 }
 
 .price-pill {
-    background: rgba(230, 57, 70, 0.18);
-    border: 1px solid var(--accent);
+    background: rgba(230, 57, 70, 0.2);
+    border: 1px solid #e63946;
     color: #ffd6da;
     padding: 6px 12px;
     border-radius: 999px;
     font-weight: 700;
     font-size: 0.9rem;
-    white-space: nowrap;
 }
 
 .row-actions {
@@ -67,9 +53,9 @@ body {
 }
 
 .btn {
-    background: var(--panel-2);
-    color: var(--text);
-    border: 1px solid var(--border);
+    background: #25252d;
+    color: #f4f4f8;
+    border: 1px solid #363642;
     border-radius: 10px;
     padding: 10px 12px;
     font-size: 0.9rem;
@@ -81,67 +67,41 @@ body {
     gap: 6px;
 }
 
-.btn:active {
-    transform: scale(0.98);
-}
-
 .btn-primary {
-    background: var(--accent);
-    border-color: var(--accent);
-    color: #fff;
+    background: #e63946;
+    border-color: #e63946;
+    color: #ffffff;
 }
 
-/* JEDEN ČISTÝ RÁM NÁHĽADU */
 .stage {
     position: relative;
     width: 100%;
     aspect-ratio: 4 / 5;
-    max-height: 430px;
+    max-height: 420px;
     background: #121216;
-    border: 1px solid var(--border);
+    border: 1px solid #2e2e38;
     border-radius: 14px;
     overflow: hidden;
     touch-action: none;
 }
 
-#bodyImg,
-#cameraVideo {
-    position: absolute;
-    inset: 0;
+#bodyImg {
     width: 100%;
     height: 100%;
     object-fit: cover;
     display: block;
-    z-index: 1;
-}
-
-#cameraVideo {
-    display: none;
-    z-index: 2;
-}
-
-.stage.camera-on #cameraVideo {
-    display: block;
-}
-
-.stage.camera-on #bodyImg {
-    display: none;
 }
 
 #tattooLayer {
     position: absolute;
     left: 50%;
     top: 50%;
-    transform: translate(-50%, -50%) scale(1) rotate(0deg);
+    transform: translate(-50%, -50%) rotate(0deg);
     transform-origin: center center;
-    z-index: 4;
+    z-index: 5;
     cursor: grab;
     touch-action: none;
     user-select: none;
-}
-
-#tattooLayer:active {
-    cursor: grabbing;
 }
 
 #tattooImg {
@@ -153,21 +113,6 @@ body {
     mix-blend-mode: multiply;
 }
 
-.camera-bar {
-    position: absolute;
-    bottom: 10px;
-    left: 50%;
-    transform: translateX(-50%);
-    z-index: 6;
-    display: none;
-    gap: 8px;
-}
-
-.stage.camera-on .camera-bar {
-    display: flex;
-}
-
-/* ŠTÝLY A GALÉRIA */
 .tabs {
     display: flex;
     gap: 8px;
@@ -177,9 +122,9 @@ body {
 
 .tab {
     flex: 0 0 auto;
-    background: var(--panel-2);
-    color: var(--muted);
-    border: 1px solid var(--border);
+    background: #25252d;
+    color: #b4b4c4;
+    border: 1px solid #363642;
     border-radius: 999px;
     padding: 7px 14px;
     font-size: 0.84rem;
@@ -188,9 +133,9 @@ body {
 }
 
 .tab.active {
-    background: var(--accent);
-    border-color: var(--accent);
-    color: #fff;
+    background: #e63946;
+    border-color: #e63946;
+    color: #ffffff;
 }
 
 .gallery {
@@ -201,22 +146,18 @@ body {
 }
 
 .thumb {
-    flex: 0 0 72px;
-    width: 72px;
-    height: 72px;
+    flex: 0 0 70px;
+    width: 70px;
+    height: 70px;
     background: #ffffff;
-    border: 2px solid var(--border);
+    border: 2px solid #363642;
     border-radius: 10px;
-    padding: 5px;
+    padding: 4px;
     cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
 }
 
 .thumb.active {
-    border-color: var(--accent-2);
-    box-shadow: 0 0 0 2px rgba(230, 57, 70, 0.35);
+    border-color: #ff5964;
 }
 
 .thumb img {
@@ -226,10 +167,9 @@ body {
     display: block;
 }
 
-/* PANEL FILTROV A POSUVNÍKOV */
 .panel {
-    background: var(--panel-2);
-    border: 1px solid var(--border);
+    background: #222229;
+    border: 1px solid #32323d;
     border-radius: 12px;
     padding: 10px;
     display: flex;
@@ -251,26 +191,26 @@ body {
 
 .ctrl label {
     font-size: 0.8rem;
-    color: var(--muted);
+    color: #b4b4c4;
     display: flex;
     justify-content: space-between;
 }
 
 .ctrl label span {
-    color: var(--text);
+    color: #ffffff;
     font-weight: 700;
 }
 
 input[type="range"] {
     width: 100%;
-    accent-color: var(--accent);
+    accent-color: #e63946;
 }
 
 select {
     width: 100%;
-    background: #16161b;
-    color: var(--text);
-    border: 1px solid var(--border);
+    background: #15151a;
+    color: #f4f4f8;
+    border: 1px solid #363642;
     border-radius: 8px;
     padding: 8px;
     font-size: 0.86rem;
@@ -283,9 +223,9 @@ select {
 }
 
 .chip {
-    background: #16161b;
-    color: var(--text);
-    border: 1px solid var(--border);
+    background: #15151a;
+    color: #f4f4f8;
+    border: 1px solid #363642;
     border-radius: 999px;
     padding: 5px 10px;
     font-size: 0.78rem;
@@ -294,9 +234,9 @@ select {
 }
 
 .chip.active {
-    background: var(--accent);
-    border-color: var(--accent);
-    color: #fff;
+    background: #e63946;
+    border-color: #e63946;
+    color: #ffffff;
 }
 
 input[type="file"] {
