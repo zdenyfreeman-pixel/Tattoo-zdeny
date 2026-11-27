@@ -312,6 +312,46 @@
             color: #ffffff;
         }
 
+        .save-modal {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.85);
+            z-index: 60;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 14px;
+        }
+
+        .save-modal.open {
+            display: flex;
+        }
+
+        .save-card {
+            width: 100%;
+            max-width: 440px;
+            background: #1c1c22;
+            border: 1px solid #383844;
+            border-radius: 14px;
+            padding: 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .save-card img {
+            width: 100%;
+            border-radius: 10px;
+            display: block;
+            background: #101014;
+        }
+
+        .save-hint {
+            font-size: 0.82rem;
+            color: #d7d7e2;
+            text-align: center;
+        }
+
         @media (max-width: 400px) {
             .grid-2 {
                 grid-template-columns: 1fr;
@@ -451,6 +491,14 @@
             </div>
 
             <button type="button" class="btn btn-primary" id="saveBtn">💾 Uložiť náhľad</button>
+        </div>
+    </div>
+
+    <div class="save-modal" id="saveModal">
+        <div class="save-card">
+            <img id="savePreviewImg" alt="Uložený náhľad" />
+            <div class="save-hint">Podrž prst na obrázku a daj „Uložiť obrázok“</div>
+            <button type="button" class="btn btn-primary" id="closeSaveModal">Zavrieť</button>
         </div>
     </div>
 
@@ -646,6 +694,9 @@
             const bodyFileInput = document.getElementById("bodyFileInput");
             const tattooFileInput = document.getElementById("tattooFileInput");
             const saveBtn = document.getElementById("saveBtn");
+            const saveModal = document.getElementById("saveModal");
+            const savePreviewImg = document.getElementById("savePreviewImg");
+            const closeSaveModal = document.getElementById("closeSaveModal");
 
             if (bodyImg) bodyImg.src = makeHandPng();
             if (tattooImg) tattooImg.src = state.motif.src;
@@ -708,231 +759,4 @@
                     const card = document.createElement("div");
                     card.className = "thumb" + (state.motif.id === m.id ? " active" : "");
                     const img = document.createElement("img");
-                    img.src = m.src;
-                    img.alt = m.name;
-                    card.appendChild(img);
-                    card.addEventListener("click", async () => {
-                        state.motif = m;
-                        await refreshMotifImage();
-                        renderGallery();
-                        updatePrice();
-                    });
-                    gallery.appendChild(card);
-                });
-            }
-
-            function stopCamera() {
-                if (state.stream) {
-                    state.stream.getTracks().forEach(t => t.stop());
-                    state.stream = null;
-                }
-                if (stage) stage.classList.remove("camera-on");
-            }
-
-            if (cameraBtn) {
-                cameraBtn.addEventListener("click", async () => {
-                    showStatus("");
-                    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-                        showStatus("Živá kamera tu nie je podporovaná. Použi tlačidlo Nahrať fotku.");
-                        return;
-                    }
-                    try {
-                        stopCamera();
-                        const stream = await navigator.mediaDevices.getUserMedia({
-                            video: { facingMode: "environment" },
-                            audio: false
-                        });
-                        state.stream = stream;
-                        if (cameraVideo) {
-                            cameraVideo.srcObject = stream;
-                            await cameraVideo.play();
-                        }
-                        if (stage) stage.classList.add("camera-on");
-                    } catch (err) {
-                        showStatus("Kamera nešla spustiť: " + (err && err.message ? err.message : "skontroluj povolenie kamery v prehliadači."));
-                    }
-                });
-            }
-
-            if (closeCamBtn) {
-                closeCamBtn.addEventListener("click", () => {
-                    stopCamera();
-                    showStatus("");
-                });
-            }
-
-            if (snapBtn) {
-                snapBtn.addEventListener("click", () => {
-                    const w = (cameraVideo && cameraVideo.videoWidth) || 600;
-                    const h = (cameraVideo && cameraVideo.videoHeight) || 750;
-                    const c = document.createElement("canvas");
-                    c.width = w;
-                    c.height = h;
-                    if (cameraVideo) c.getContext("2d").drawImage(cameraVideo, 0, 0, w, h);
-                    if (bodyImg) bodyImg.src = c.toDataURL("image/jpeg", 0.92);
-                    stopCamera();
-                });
-            }
-
-            if (bodyFileInput) {
-                bodyFileInput.addEventListener("change", e => {
-                    const file = e.target.files && e.target.files[0];
-                    if (!file) return;
-                    stopCamera();
-                    showStatus("");
-                    const reader = new FileReader();
-                    reader.onload = () => {
-                        if (bodyImg) bodyImg.src = reader.result;
-                    };
-                    reader.readAsDataURL(file);
-                    e.target.value = "";
-                });
-            }
-
-            if (tattooFileInput) {
-                tattooFileInput.addEventListener("change", e => {
-                    const file = e.target.files && e.target.files[0];
-                    if (!file) return;
-                    showStatus("");
-                    const reader = new FileReader();
-                    reader.onload = async () => {
-                        const raw = reader.result;
-                        const cleaned = await processMotifImage(raw, state.whiteCutoff, state.edgeSoft);
-                        const custom = { id: Date.now(), name: file.name, style: "all", complexity: 1.25, rawSrc: raw, src: cleaned };
-                        MOTIFS.unshift(custom);
-                        state.motif = custom;
-                        if (tattooImg) tattooImg.src = cleaned;
-                        renderGallery();
-                        updatePrice();
-                    };
-                    reader.readAsDataURL(file);
-                    e.target.value = "";
-                });
-            }
-
-            document.querySelectorAll(".tab").forEach(tab => {
-                tab.addEventListener("click", () => {
-                    document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
-                    tab.classList.add("active");
-                    state.style = tab.dataset.style || "all";
-                    renderGallery();
-                });
-            });
-
-            document.querySelectorAll(".chip").forEach(chip => {
-                chip.addEventListener("click", async () => {
-                    document.querySelectorAll(".chip").forEach(c => c.classList.remove("active"));
-                    chip.classList.add("active");
-                    const p = chip.dataset.preset;
-                    if (p === "noWhite") { state.blend = "multiply"; state.opacity = 0.92; state.blur = 0.5; state.contrast = 175; state.brightness = 96; state.whiteCutoff = 215; state.edgeSoft = 28; }
-                    else if (p === "fresh") { state.blend = "multiply"; state.opacity = 0.88; state.blur = 0.6; state.contrast = 155; state.brightness = 98; state.whiteCutoff = 225; state.edgeSoft = 24; }
-                    else if (p === "healed") { state.blend = "multiply"; state.opacity = 0.7; state.blur = 1.2; state.contrast = 135; state.brightness = 102; state.whiteCutoff = 230; state.edgeSoft = 34; }
-                    else if (p === "vintage") { state.blend = "multiply"; state.opacity = 0.62; state.blur = 1.0; state.contrast = 125; state.brightness = 104; state.whiteCutoff = 235; state.edgeSoft = 36; }
-                    else if (p === "soft") { state.blend = "multiply"; state.opacity = 0.58; state.blur = 1.8; state.contrast = 120; state.brightness = 104; state.whiteCutoff = 230; state.edgeSoft = 40; }
-                    else if (p === "bold") { state.blend = "color-burn"; state.opacity = 0.94; state.blur = 0.4; state.contrast = 200; state.brightness = 94; state.whiteCutoff = 210; state.edgeSoft = 22; }
-                    else if (p === "faded") { state.blend = "multiply"; state.opacity = 0.45; state.blur = 1.5; state.contrast = 110; state.brightness = 108; state.whiteCutoff = 235; state.edgeSoft = 38; }
-                    else if (p === "sharp") { state.blend = "multiply"; state.opacity = 0.92; state.blur = 0.0; state.contrast = 190; state.brightness = 96; state.whiteCutoff = 210; state.edgeSoft = 15; }
-
-                    const bs = document.getElementById("blendSelect");
-                    if (bs) bs.value = state.blend;
-                    const setVal = (id, v) => { const n = document.getElementById(id); if (n) n.value = v; };
-                    setVal("opRange", Math.round(state.opacity * 100));
-                    setVal("blurRange", state.blur);
-                    setVal("conRange", state.contrast);
-                    setVal("briRange", state.brightness);
-                    setVal("cutRange", state.whiteCutoff);
-                    setVal("edgeRange", state.edgeSoft);
-                    await refreshMotifImage();
-                    renderGallery();
-                    applyView();
-                });
-            });
-
-            const bind = (id, fn) => {
-                const n = document.getElementById(id);
-                if (n) n.addEventListener(n.tagName === "SELECT" ? "change" : "input", () => fn(n.value));
-            };
-            bind("blendSelect", v => { state.blend = v; applyView(); });
-            bind("skinFilterSelect", v => { state.skinFilter = v; applyView(); });
-            bind("sizeRange", v => { state.sizeCm = Number(v); applyView(); });
-            bind("rotRange", v => { state.rotation = Number(v); applyView(); });
-            bind("opRange", v => { state.opacity = Number(v) / 100; applyView(); });
-            bind("blurRange", v => { state.blur = Number(v); applyView(); });
-            bind("conRange", v => { state.contrast = Number(v); applyView(); });
-            bind("briRange", v => { state.brightness = Number(v); applyView(); });
-            bind("cutRange", async v => {
-                state.whiteCutoff = Number(v);
-                applyView();
-                await refreshMotifImage();
-                renderGallery();
-            });
-            bind("edgeRange", async v => {
-                state.edgeSoft = Number(v);
-                applyView();
-                await refreshMotifImage();
-                renderGallery();
-            });
-
-            if (tattooLayer) {
-                let drag = null;
-                tattooLayer.addEventListener("pointerdown", e => {
-                    e.preventDefault();
-                    tattooLayer.setPointerCapture(e.pointerId);
-                    drag = { x: e.clientX - state.x, y: e.clientY - state.y };
-                });
-                tattooLayer.addEventListener("pointermove", e => {
-                    if (!drag) return;
-                    state.x = Math.round(e.clientX - drag.x);
-                    state.y = Math.round(e.clientY - drag.y);
-                    applyView();
-                });
-                tattooLayer.addEventListener("pointerup", () => { drag = null; });
-                tattooLayer.addEventListener("pointercancel", () => { drag = null; });
-            }
-
-            if (saveBtn && stage) {
-                saveBtn.addEventListener("click", () => {
-                    const rect = stage.getBoundingClientRect();
-                    const out = document.createElement("canvas");
-                    out.width = Math.round(rect.width * 2);
-                    out.height = Math.round(rect.height * 2);
-                    const ctx = out.getContext("2d");
-                    ctx.scale(2, 2);
-                    ctx.filter = state.skinFilter || "none";
-                    if (bodyImg && bodyImg.complete && bodyImg.naturalWidth) {
-                        ctx.drawImage(bodyImg, 0, 0, rect.width, rect.height);
-                    }
-                    if (tattooImg && tattooImg.complete && tattooImg.naturalWidth) {
-                        ctx.save();
-                        const cx = rect.width / 2 + state.x;
-                        const cy = rect.height / 2 + state.y;
-                        const w = tattooImg.getBoundingClientRect().width;
-                        const ratio = tattooImg.naturalWidth ? tattooImg.naturalHeight / tattooImg.naturalWidth : 1;
-                        const h = w * ratio;
-                        ctx.translate(cx, cy);
-                        ctx.rotate((state.rotation * Math.PI) / 180);
-                        ctx.globalCompositeOperation = state.blend === "normal" ? "source-over" : state.blend;
-                        ctx.globalAlpha = state.opacity;
-                        ctx.filter = `blur(${state.blur}px) contrast(${state.contrast}%) brightness(${state.brightness}%)`;
-                        ctx.drawImage(tattooImg, -w / 2, -h / 2, w, h);
-                        ctx.restore();
-                    }
-                    const a = document.createElement("a");
-                    a.download = "inkpreview.png";
-                    a.href = out.toDataURL("image/png");
-                    a.click();
-                });
-            }
-
-            renderGallery();
-            applyView();
-        }
-
-        if (document.readyState === "loading") {
-            document.addEventListener("DOMContentLoaded", initApp);
-        } else {
-            initApp();
-        }
-    </script>
-</body>
-</html>
+                    img.src = m
