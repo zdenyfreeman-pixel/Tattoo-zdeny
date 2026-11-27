@@ -1,109 +1,138 @@
 <!DOCTYPE html>
 <html lang="sk">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>InkPreview AR - Realistický náhľad tetovania</title>
-    <link rel="stylesheet" href="style.css">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>INKPREVIEW</title>
+    <link rel="stylesheet" href="style.css" />
 </head>
 <body>
+    <div class="app">
+        <header class="topbar">
+            <div class="brand">INKPREVIEW</div>
+            <div class="price-pill" id="priceDisplay">Odhad ceny: 100 €</div>
+        </header>
 
-<div class="app-container">
-    <!-- Hlavička -->
-    <header>
-        <h1>INK<span>PREVIEW</span></h1>
-        <div class="price-badge">
-            <span>Odhad ceny:</span>
-            <strong id="priceDisplay">85 €</strong>
-        </div>
-    </header>
-
-    <!-- Hlavné plátno (Fotoaparát / Fotka + Tetovanie) -->
-    <main class="canvas-wrapper" id="canvasWrapper">
-        <video id="cameraStream" autoplay playsinline hidden></video>
-        <img id="bodyImage" src="https://images.unsplash.com/photo-1515377905703-c4788e51af15?auto=format&fit=crop&w=800&q=80" alt="Časť tela">
-        
-        <!-- Vrstva tetovania -->
-        <div id="tattooLayer" class="tattoo-overlay">
-            <img id="tattooImg" src="" alt="Tetovanie">
+        <div class="row-actions">
+            <button type="button" class="btn" id="cameraBtn">📷 Odfotiť telo</button>
+            <label class="btn" for="bodyFileInput">🖼️ Nahrať fotku</label>
+            <input type="file" id="bodyFileInput" accept="image/*" />
         </div>
 
-        <!-- Tlačidlá pre kameru a fotku -->
-        <div class="camera-controls">
-            <button id="startCameraBtn" class="btn-icon">📷 Odfotiť telo</button>
-            <button id="captureBtn" class="btn-icon primary" hidden>📸 Zachytiť fotku</button>
-            <label class="btn-icon">
-                🖼️ Nahrať fotku
-                <input type="file" id="uploadBodyInput" accept="image/*" hidden>
-            </label>
-        </div>
-    </main>
+        <!-- LEN JEDEN NÁHĽADOVÝ RÁM -->
+        <div class="stage" id="stage">
+            <img id="bodyImg" alt="Fotka tela" />
+            <video id="cameraVideo" playsinline autoplay muted></video>
 
-    <!-- Ovládací panel -->
-    <section class="controls-panel">
-        <!-- Výber štýlu -->
+            <div id="tattooLayer">
+                <img id="tattooImg" alt="Tetovanie" />
+            </div>
+
+            <div class="camera-bar">
+                <button type="button" class="btn btn-primary" id="snapBtn">📸 Spraviť fotku</button>
+                <button type="button" class="btn" id="closeCamBtn">✖ Zavrieť</button>
+            </div>
+        </div>
+
         <div class="tabs" id="styleTabs">
-            <button class="tab active" data-style="all">Všetky</button>
-            <button class="tab" data-style="realism">Realizmus</button>
-            <button class="tab" data-style="blackwork">Blackwork</button>
-            <button class="tab" data-style="fineline">Fine Line</button>
-            <button class="tab" data-style="japanese">Japonské</button>
+            <button type="button" class="tab active" data-style="all">Všetky</button>
+            <button type="button" class="tab" data-style="realism">Realizmus</button>
+            <button type="button" class="tab" data-style="blackwork">Blackwork</button>
+            <button type="button" class="tab" data-style="fineline">Fine Line</button>
+            <button type="button" class="tab" data-style="japanese">Japonský</button>
         </div>
 
-        <!-- Galéria tetovaní -->
-        <div class="tattoo-gallery" id="tattooGallery">
-            <!-- Generované cez JS -->
+        <div class="gallery" id="gallery"></div>
+
+        <div class="panel">
+            <div class="ctrl">
+                <label>Rýchle filtre tetovania</label>
+                <div class="preset-row" id="presetChips">
+                    <button type="button" class="chip active" data-preset="fresh">Čerstvý atrament</button>
+                    <button type="button" class="chip" data-preset="healed">Zahojené</button>
+                    <button type="button" class="chip" data-preset="vintage">Starší atrament</button>
+                    <button type="button" class="chip" data-preset="noWhite">Čistý čierny (bez bielej)</button>
+                    <button type="button" class="chip" data-preset="softShadow">Jemný tieň</button>
+                    <button type="button" class="chip" data-preset="highInk">Silný kontrast</button>
+                </div>
+            </div>
+
+            <div class="grid-2">
+                <div class="ctrl">
+                    <label>Režim splynutia <span>(koža)</span></label>
+                    <select id="blendSelect">
+                        <option value="multiply" selected>Multiply (odstráni bielu)</option>
+                        <option value="darken">Darken (tmavý atrament)</option>
+                        <option value="color-burn">Color Burn (hlboký tieň)</option>
+                        <option value="hard-light">Hard Light (výrazný)</option>
+                        <option value="overlay">Overlay (splývavý)</option>
+                        <option value="normal">Normal (plný obrázok)</option>
+                    </select>
+                </div>
+
+                <div class="ctrl">
+                    <label>Filter pokožky / náhľadu</label>
+                    <select id="skinFilterSelect">
+                        <option value="none" selected>Prirodzená koža</option>
+                        <option value="grayscale(100%) contrast(112%)">Čiernobiely tón (B&W)</option>
+                        <option value="sepia(35%) contrast(108%)">Teplý tón pokožky</option>
+                        <option value="contrast(120%) saturate(90%)">Vyšší kontrast</option>
+                        <option value="brightness(94%) contrast(115%)">Tlmené svetlo</option>
+                        <option value="hue-rotate(-10deg) saturate(110%)">Chladnejší tón</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="grid-2">
+                <div class="ctrl">
+                    <label>Rozmer <span id="sizeVal">15 cm</span></label>
+                    <input type="range" id="sizeRange" min="5" max="35" value="15" />
+                </div>
+
+                <div class="ctrl">
+                    <label>Rotácia <span id="rotVal">0°</span></label>
+                    <input type="range" id="rotRange" min="-180" max="180" value="0" />
+                </div>
+
+                <div class="ctrl">
+                    <label>Krytie atramentu <span id="opVal">85%</span></label>
+                    <input type="range" id="opRange" min="15" max="100" value="85" />
+                </div>
+
+                <div class="ctrl">
+                    <label>Rozmazanie <span id="blurVal">0.6px</span></label>
+                    <input type="range" id="blurRange" min="0" max="4" step="0.2" value="0.6" />
+                </div>
+
+                <div class="ctrl">
+                    <label>Kontrast motívu <span id="conVal">125%</span></label>
+                    <input type="range" id="conRange" min="60" max="220" value="125" />
+                </div>
+
+                <div class="ctrl">
+                    <label>Jas motívu <span id="briVal">100%</span></label>
+                    <input type="range" id="briRange" min="60" max="150" value="100" />
+                </div>
+
+                <div class="ctrl">
+                    <label>Sýtosť motívu <span id="satVal">100%</span></label>
+                    <input type="range" id="satRange" min="0" max="180" value="100" />
+                </div>
+
+                <div class="ctrl">
+                    <label>Zaoblenie okrajov <span id="radVal">12px</span></label>
+                    <input type="range" id="radRange" min="0" max="60" value="12" />
+                </div>
+            </div>
         </div>
 
-        <!-- Posuvníky pre realizmus na koži a rozmer -->
-        <div class="sliders-grid">
-            <div class="control-group">
-                <label>Rozmer: <span id="sizeVal">10</span> cm</label>
-                <input type="range" id="sizeSlider" min="3" max="30" value="10">
-            </div>
-
-            <div class="control-group">
-                <label>Rotácia: <span id="rotateVal">0</span>°</label>
-                <input type="range" id="rotateSlider" min="-180" max="180" value="0">
-            </div>
-
-            <div class="control-group">
-                <label>Splynutie s kožou (Krytie): <span id="opacityVal">85</span>%</label>
-                <input type="range" id="opacitySlider" min="30" max="100" value="85">
-            </div>
-
-            <div class="control-group">
-                <label>Efekt zahojenia (Rozmazanie): <span id="blurVal">0.4</span>px</label>
-                <input type="range" id="blurSlider" min="0" max="2" step="0.1" value="0.4">
-            </div>
-
-            <div class="control-group">
-                <label>Kontrast atramentu: <span id="contrastVal">115</span>%</label>
-                <input type="range" id="contrastSlider" min="70" max="160" value="115">
-            </div>
-
-            <div class="control-group">
-                <label>Filter kože:</label>
-                <select id="blendModeSelect">
-                    <option value="multiply" selected>Realistický atrament (Multiply)</option>
-                    <option value="darken">Tmavá koža (Darken)</option>
-                    <option value="color-burn">Hlboký tieň (Color Burn)</option>
-                    <option value="normal">Čerstvé tetovanie (Normal)</option>
-                </select>
-            </div>
+        <div class="row-actions">
+            <label class="btn" for="tattooFileInput">+ Vlastný motív</label>
+            <input type="file" id="tattooFileInput" accept="image/*" />
+            <button type="button" class="btn btn-primary" id="saveBtn">💾 Uložiť náhľad</button>
         </div>
+    </div>
 
-        <!-- Akčné tlačidlá -->
-        <div class="footer-actions">
-            <label class="btn-secondary">
-                ➕ Vlastný motív
-                <input type="file" id="uploadTattooInput" accept="image/*" hidden>
-            </label>
-            <button id="saveResultBtn" class="btn-primary">💾 Uložiť náhľad</button>
-        </div>
-    </section>
-</div>
-
-<script src="app.js"></script>
+    <script src="app.js"></script>
 </body>
 </html>
