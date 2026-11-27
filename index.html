@@ -15,7 +15,7 @@
 
         <div class="row-actions">
             <label class="btn btn-primary" for="cameraInput">📷 Odfotiť telo</label>
-            <input type="file" id="cameraInput" accept="image/*" capture="environment" />
+            <input type="file" id="cameraInput" accept="image/*" />
 
             <label class="btn" for="bodyFileInput">🖼️ Nahrať fotku</label>
             <input type="file" id="bodyFileInput" accept="image/*" />
@@ -45,6 +45,7 @@
                     <button type="button" class="chip active" data-preset="fresh">Čerstvý atrament</button>
                     <button type="button" class="chip" data-preset="noWhite">Bez bieleho pozadia</button>
                     <button type="button" class="chip" data-preset="healed">Zahojené</button>
+                    <button type="button" class="chip" data-preset="vintage">Starší atrament</button>
                     <button type="button" class="chip" data-preset="soft">Jemný tieň</button>
                     <button type="button" class="chip" data-preset="bold">Výrazný čierny</button>
                 </div>
@@ -71,6 +72,7 @@
                         <option value="sepia(30%) contrast(108%)">Teplý tón</option>
                         <option value="contrast(120%)">Vyšší kontrast</option>
                         <option value="brightness(94%) contrast(112%)">Tlmené svetlo</option>
+                        <option value="hue-rotate(-10deg) saturate(110%)">Chladnejší tón</option>
                     </select>
                 </div>
             </div>
